@@ -2,7 +2,7 @@
   "name": "Octopus Development Container",
   "image": "mcr.microsoft.com/devcontainers/cpp:1-ubuntu-24.04",
   "hostRequirements": {
-    "cpus": 8,
+    "cpus": 4,
     "memory": "16gb",
     "storage": "32gb"
   },
