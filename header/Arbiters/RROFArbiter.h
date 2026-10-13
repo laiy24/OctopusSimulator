@@ -10,6 +10,9 @@ namespace octopus
 {
     class RROFArbiter : public Arbiter
     {
+    private:
+        std::unordered_map<uint64_t, std::pair<int, int>> buffer_index;
+
     public:
         RROFArbiter(vector<int> *candidates_ids, int arbiter_period);
         ~RROFArbiter() override;

@@ -44,6 +44,7 @@ namespace MCsim
 			CASIntra_ready =0;
 			CASIntra_found =0;
 			numReq =requestorsQueues->getRRQueueSize ();
+			readyCMD.reserve(numReq);
 			for (unsigned int i =0; i < numReq;i++)
 			{
 				requestorFlag.push_back(true);

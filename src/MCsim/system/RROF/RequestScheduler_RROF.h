@@ -22,7 +22,7 @@ namespace MCsim
 		bool loopFlag = true;
 		unsigned int slot=0;
 		vector<bool> requestorFlag;
-		map<unsigned int, bool> bankFlag;
+		vector<bool> bankFlag;
 		bool stopFlag = true;
 		unsigned int orig_core;
 
@@ -38,7 +38,8 @@ namespace MCsim
 		{
 			requestorsNum = requestorsQueues-> getRRQueueSize ();
 			requestorFlag.clear();
-			bankFlag.clear();
+			requestorFlag.reserve(requestorsNum);
+			bankFlag.assign(commandQueue.size(), false);
 			loopFlag = true;
 			slot=0;
 			orig_core = -1;
@@ -47,19 +48,13 @@ namespace MCsim
 			{
 				requestorFlag.push_back(true);
 			}
+
 			// flag true for empty command bank queue
 			for (unsigned int j=0; j < commandQueue.size(); j++)
 			{
-				if (commandQueue[j]->getSize(true) == 0)
-				{
-					bankFlag[j] = true;
-				}
-				else
-				{
-					bankFlag[j] =false;
-				}	
+				bankFlag[j] = commandQueue[j]->getSize(true) == 0;
 			}
-			
+
 			while(loopFlag)
 			{	
 				for (unsigned int it=0; it != requestorsNum; it++) //iterate on RR queue, taking the oldest request from each requestor

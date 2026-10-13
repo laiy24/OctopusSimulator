@@ -21,8 +21,12 @@ namespace octopus
         if (message_count == 0)
             return false;
 
-        unordered_map<uint64_t, pair<int, int>> buffer_index;
-        buffer_index.reserve(message_count);
+        // Clear existing entries so the index contains strictly the messages currently
+        // in buffers. Reusing the persistent member preserves the allocated bucket array,
+        // eliminating bucket reallocations while guaranteeing exact original election behavior.
+        buffer_index.clear();
+        if (buffer_index.bucket_count() < message_count)
+            buffer_index.reserve(message_count);
         for (int buffer_index_value = 0; buffer_index_value < (int)buffers.size(); ++buffer_index_value)
         {
             for (int message_index = 0; message_index < (int)buffers[buffer_index_value]->size(); ++message_index)
