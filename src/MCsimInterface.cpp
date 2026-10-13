@@ -162,6 +162,8 @@ namespace octopus
             {
                 uint64_t data = m_read_count;
                 m_read_count++;
+                uint8_t data_buffer[64] = {};
+                memcpy(data_buffer, &data, sizeof(data));
 
                 Message msg = Message(m_pending_requests[i].msg_id, // Id
                                       m_pending_requests[i].addr,   // Addr
@@ -170,7 +172,7 @@ namespace octopus
                                       m_pending_requests[i].owner); // Owner
                 msg.to.push_back((uint16_t)m_llc_id);               // To (back to the LLC)
                 msg.kind = Message::K_FILL;
-                msg.copy((uint8_t *)&data);
+                msg.copy(data_buffer);
                 m_output_buffer.push_back(msg);
 
                 m_pending_requests.erase(m_pending_requests.begin() + i);

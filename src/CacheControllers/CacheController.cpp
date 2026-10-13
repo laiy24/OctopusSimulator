@@ -8,6 +8,7 @@
 
 #include "../../header/CacheControllers/CacheController.h"
 #include "../../header/Protocols/MSIProtocol.h"   // REQUEST_TYPE_GETS for the deferred-supply rule
+#include "../../header/Arbiters/RROFArbiter.h"
 #include <cstdio>
 #include <cstdlib>
 #include "../../header/ExternalCPU.h"
@@ -65,6 +66,8 @@ namespace octopus
             m_data_access_arbiter = new RRArbiter(arbiter_candidates_ids, m_data_handler->getDataAccessLatency());
         else if(arbiter_type == STRINGIFY(FCFSArbiter))                                                    
             m_data_access_arbiter = new FCFSArbiter(arbiter_candidates_ids, m_data_handler->getDataAccessLatency());
+        else if(arbiter_type == STRINGIFY(RROFArbiter))
+            m_data_access_arbiter = new RROFArbiter(arbiter_candidates_ids, m_data_handler->getDataAccessLatency());
 
         // Whole-message deferral (the pipelined model always, the occupancy
         // model with line_interlock) is only safe with the line hold: without

@@ -182,7 +182,7 @@ namespace octopus
         char* line = new char[MAX_LINE_SIZE];
         string extension_path;
 
-        fscanf(file, "%[^\n]\n", line);
+        (void)fscanf(file, "%[^\n]\n", line);
         if(checkKeywords(line, &extension_path))
         {
             parseFile(config_path, extension_path);

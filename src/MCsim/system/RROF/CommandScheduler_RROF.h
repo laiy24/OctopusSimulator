@@ -120,7 +120,6 @@ namespace MCsim
 								if (readyCMD[i]->busPacketType == BusPacketType::WR)
 								{
 									requestorsQueues->removeRequest(readyCMD[i]->requestorID, readyCMD[i]->reqID);	
-									cout << "CommandScheduler: remove: " << readyCMD[i]->reqID << " core: " << readyCMD[i]->requestorID << " size: " << requestorsQueues->getRequestorSize(readyCMD[i]->requestorID) << endl;
 								}									
 								scheduledCommand = commandQueue[readyCMD[i]->bank]->getCommand(true);
 								sendCommand(scheduledCommand,readyCMD[i]->bank, false);
