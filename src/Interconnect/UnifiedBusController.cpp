@@ -22,6 +22,8 @@ namespace octopus
             m_arbiters.push_back(new FCFSArbiter(m_lower_level_ids, m_request_latency + m_response_latency));
         else if(arbiter_type == STRINGIFY(RRArbiter))
             m_arbiters.push_back(new RRArbiter(m_lower_level_ids, m_request_latency + m_response_latency));
+        else if(arbiter_type == STRINGIFY(RROFArbiter))
+            m_arbiters.push_back(new RROFArbiter(m_lower_level_ids, m_request_latency + m_response_latency));
         else
         {
             cout << "Error: there is no matching arbiter" << endl;

@@ -9,6 +9,7 @@
 #include <cstdlib>
 #include "../header/MCsimInterface.h"
 #include "../header/Logger.h"
+#include "../header/RequestorsQueues.h"
 
 using namespace std;
 
@@ -49,6 +50,7 @@ namespace octopus
             1,
             1);
         m_mcsim->setCPUClockSpeed(2.4 * 1e9);
+        RequestorsQueues::setRequestorsQueues(m_mcsim->getRequestorsQueues());
 
         MCsim::TransactionCompleteCB *read_cb = new MCsim::MCsimCallback<MCsimInterface, void, unsigned, uint64_t, uint64_t>(this, &MCsimInterface::read_callback);
         MCsim::TransactionCompleteCB *write_cb = new MCsim::MCsimCallback<MCsimInterface, void, unsigned, uint64_t, uint64_t>(this, &MCsimInterface::write_callback);
@@ -57,6 +59,8 @@ namespace octopus
 
     MCsimInterface::~MCsimInterface()
     {
+        if (RequestorsQueues::getRequestorsQueues() == m_mcsim->getRequestorsQueues())
+            RequestorsQueues::setRequestorsQueues(nullptr);
         delete m_mcsim;
     }
 
@@ -93,13 +97,20 @@ namespace octopus
             if (mcsimTraced(ready_msg.addr))
                 cout << "[mcsim] cyc " << m_clk_cycle << " request addr 0x" << std::hex << ready_msg.addr << std::dec << " msg " << ready_msg.msg_id
                      << " owner " << ready_msg.owner << (ready_msg.data == NULL ? " READ" : " WRITE") << " pending " << m_pending_requests.size() << endl;
-            if (m_mcsim->addRequest(ready_msg.owner, ready_msg.addr, ready_msg.data == NULL, m_llc_line_size)) // 1 -> Read, 0 -> Write
+            if (m_mcsim->addRequest(ready_msg.owner, ready_msg.addr, ready_msg.data == NULL,
+                                    m_llc_line_size, ready_msg.msg_id)) // 1 -> Read, 0 -> Write
             {
                 // Design B: request has entered DRAM (mirrors MainMemoryController's stamp).
                 Logger::getLogger()->event(ready_msg.msg_id, Logger::Role::DRAM, (uint32_t)m_id, Logger::Phase::ENTER);
                 Logger::getLogger()->trace(ready_msg, Logger::Role::DRAM, (uint32_t)m_id, Logger::Phase::ENTER);
+                MCsim::RequestorsQueues *requestors_queues = RequestorsQueues::getRequestorsQueues();
+                if (requestors_queues != nullptr)
+                    requestors_queues->addRequest(ready_msg.owner, (unsigned int)ready_msg.msg_id,
+                                                  1, (unsigned int)ready_msg.addr);
                 if (ready_msg.data == NULL) // Add read requests only (writes are fire-and-forget)
                     m_pending_requests.push_back(ready_msg);
+                else
+                    m_pending_writes.push_back(ready_msg);
             }
             else
             {
@@ -178,5 +189,22 @@ namespace octopus
     void MCsimInterface::write_callback(unsigned id, uint64_t address, uint64_t clock_cycle)
     {
         m_write_count++;
+        for (int i = 0; i < (int)m_pending_writes.size(); ++i)
+        {
+            if (m_pending_writes[i].addr != address)
+                continue;
+
+            MCsim::RequestorsQueues *requestors_queues = RequestorsQueues::getRequestorsQueues();
+            if (requestors_queues != nullptr &&
+                requestors_queues->isRequestExist(m_pending_writes[i].owner,
+                                                  (unsigned int)m_pending_writes[i].msg_id,
+                                                  nullptr, nullptr) >= 0)
+            {
+                requestors_queues->removeRequest(m_pending_writes[i].owner,
+                                                 (unsigned int)m_pending_writes[i].msg_id);
+            }
+            m_pending_writes.erase(m_pending_writes.begin() + i);
+            return;
+        }
     }
 }

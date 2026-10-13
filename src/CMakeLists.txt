@@ -21,6 +21,7 @@ add_library(Octopus_core
             Configurable.cpp
             CLParser.cpp
             DebugPrint.cpp
+            RequestorsQueues.cpp
     )
 
     add_subdirectory(Arbiters)

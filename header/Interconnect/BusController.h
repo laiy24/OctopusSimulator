@@ -18,6 +18,7 @@
 #include "TDMArbiter.h"
 #include "FCFSArbiter.h"
 #include "RRArbiter.h"
+#include "RROFArbiter.h"
 
 #include "Logger.h"
 

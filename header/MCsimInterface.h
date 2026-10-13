@@ -36,6 +36,7 @@ namespace octopus
         uint64_t m_write_count;
 
         std::vector<Message> m_pending_requests;
+        std::vector<Message> m_pending_writes;
         std::vector<Message> m_output_buffer;
 
         CommunicationInterface *m_lower_interface; // toward the LLC (bus to DRAM)

@@ -302,7 +302,7 @@ perfect\_\allowbreak{}llc\index[cfg]{perfect\_llc@\code{perfect\_llc}} & int & \
 \toprule \normalfont key & type & value & meaning \\ \midrule \endfirsthead
 \toprule \normalfont key & type & value & meaning \\ \midrule \endhead
 \bottomrule \endfoot
-arbiter\_\allowbreak{}type\index[cfg]{arbiter\_type@\code{arbiter\_type}} & string & \texttt{NULL} & Arbiters are Null, RR, FCFS, and TDM \\
+arbiter\_\allowbreak{}type\index[cfg]{arbiter\_type@\code{arbiter\_type}} & string & \texttt{NULL} & Arbiters are Null, RR, FCFS, TDM, and RROFArbiter \\
 arbiter\_\allowbreak{}candidates\_\allowbreak{}ids\index[cfg]{arbiter\_candidates\_ids@\code{arbiter\_candidates\_ids}} & int list & \texttt{0,\allowbreak{} 1,\allowbreak{} 2,\allowbreak{} 3} &  \\
 num\_\allowbreak{}mshr\index[cfg]{num\_mshr@\code{num\_mshr}} & int & \texttt{16} & Max concurrent outstanding misses (MSHR depth). -1 = unbounded \\
 line\_\allowbreak{}interlock\index[cfg]{line\_interlock@\code{line\_interlock}} & int & \texttt{0} & 1: a line with a data-array access waiting or in flight holds every queued message to it in place (needed once the array has a latency and real data flows \\
@@ -532,4 +532,3 @@ m\_\allowbreak{}llc\_\allowbreak{}id\index[cfg]{m\_llc\_id@\code{m\_llc\_id}} & 
 m\_\allowbreak{}memory\_\allowbreak{}latency\index[cfg]{m\_memory\_latency@\code{m\_memory\_latency}} & int & \texttt{250} & Latency in cycles \\
 processing\_\allowbreak{}queue\_\allowbreak{}size\index[cfg]{processing\_queue\_size@\code{processing\_queue\_size}} & int & \texttt{32} & Request buffer depth. -1 = unbounded (legacy behavior) \\
 \end{longtable}
-
