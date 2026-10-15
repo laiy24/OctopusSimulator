@@ -43,7 +43,8 @@ namespace octopus
         Message *msg = (Message *)data_ptr;
         Message returned_msg;
         uint64_t phys_addr = msg->addr;
-        if (AddrMapping::getAddrMapping()->isBanked())
+        if (AddrMapping::getAddrMapping()->isBanked() ||
+            AddrMapping::getAddrMapping()->getPartitionSetup() == "SetPartition")
         {
             phys_addr = AddrMapping::getAddrMapping()->addr_map_restore(msg->addr, this->m_bank_index);
         }
@@ -98,7 +99,8 @@ namespace octopus
         msg->owner = (m_owner_of_latest_data > -1) ? m_owner_of_latest_data : this->m_id;
         msg->to.push_back(this->m_shared_memory_id);
 
-        if (AddrMapping::getAddrMapping()->isBanked())
+        if (AddrMapping::getAddrMapping()->isBanked() ||
+            AddrMapping::getAddrMapping()->getPartitionSetup() == "SetPartition")
         {
             AddrMapping::getAddrMapping()->addr_map_restore(msg, this->m_bank_index);
         }
@@ -117,7 +119,8 @@ namespace octopus
         Message *msg = (Message *)data_ptr;
         msg->cycle = this->m_cache_cycle;
 
-        if (AddrMapping::getAddrMapping()->isBanked())
+        if (AddrMapping::getAddrMapping()->isBanked() ||
+            AddrMapping::getAddrMapping()->getPartitionSetup() == "SetPartition")
         {
             AddrMapping::getAddrMapping()->addr_map_restore(msg, this->m_bank_index);
         }

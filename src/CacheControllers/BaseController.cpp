@@ -367,7 +367,9 @@ namespace octopus
                 Logger::getLogger()->event(pending_messages.front().msg_id, m_log_role, (uint32_t)m_id, Logger::Phase::EXIT);
                 Logger::getLogger()->trace(pending_messages.front(), m_log_role, (uint32_t)m_id, Logger::Phase::EXIT);
 
-                if (AddrMapping::getAddrMapping()->isBanked() && m_log_role == Logger::Role::LLC)
+                if ((AddrMapping::getAddrMapping()->isBanked() ||
+                     AddrMapping::getAddrMapping()->getPartitionSetup() == "SetPartition") &&
+                    m_log_role == Logger::Role::LLC)
                 {
                     AddrMapping::getAddrMapping()->addr_map_restore(&pending_messages.front(), this->m_bank_index);
                 }
@@ -415,7 +417,9 @@ namespace octopus
         Logger::getLogger()->event(msg->msg_id, m_log_role, (uint32_t)m_id, Logger::Phase::EXIT);
         Logger::getLogger()->trace(*msg, m_log_role, (uint32_t)m_id, Logger::Phase::EXIT);
 
-        if (AddrMapping::getAddrMapping()->isBanked() && m_log_role == Logger::Role::LLC)
+        if ((AddrMapping::getAddrMapping()->isBanked() ||
+             AddrMapping::getAddrMapping()->getPartitionSetup() == "SetPartition") &&
+            m_log_role == Logger::Role::LLC)
         {
             AddrMapping::getAddrMapping()->addr_map_restore(msg, this->m_bank_index);
         }
@@ -453,7 +457,9 @@ namespace octopus
             return;
         }
 
-        if (AddrMapping::getAddrMapping()->isBanked() && m_log_role == Logger::Role::LLC)
+        if ((AddrMapping::getAddrMapping()->isBanked() ||
+             AddrMapping::getAddrMapping()->getPartitionSetup() == "SetPartition") &&
+            m_log_role == Logger::Role::LLC)
         {
             AddrMapping::getAddrMapping()->addr_map_restore(msg, this->m_bank_index);
         }
@@ -504,7 +510,9 @@ namespace octopus
             Logger::getLogger()->trace(*msg, m_log_role, (uint32_t)m_id, Logger::Phase::EXIT);
         }
 
-        if (AddrMapping::getAddrMapping()->isBanked() && m_log_role == Logger::Role::LLC)
+        if ((AddrMapping::getAddrMapping()->isBanked() ||
+             AddrMapping::getAddrMapping()->getPartitionSetup() == "SetPartition") &&
+            m_log_role == Logger::Role::LLC)
         {
             AddrMapping::getAddrMapping()->addr_map_restore(msg, this->m_bank_index);
         }
