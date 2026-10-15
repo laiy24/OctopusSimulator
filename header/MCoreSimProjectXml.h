@@ -29,6 +29,8 @@ private:
     int  m_cach2Cache;
     string m_cohProtocol;
     int m_outOfOrderStages;
+    int m_llc_bnk;
+    string llc_partition;
 
     list<CacheXml> m_privateCaches;
     CacheXml m_sharedCache;
@@ -151,6 +153,18 @@ public:
       return m_nCores;
     }
 
+    int GetLLCBnk () {
+      return m_llc_bnk;
+    }
+
+    string GetLLCPartition () {
+      return llc_partition;
+    }
+
+    void SetLLCPartition (string part) {
+      llc_partition = part;
+    }
+
     int GetCache2Cache () {
       return m_cach2Cache;
     }
@@ -198,6 +212,7 @@ public:
        m_runTillSimEnd      = 0;
        m_busClkNanoSec      = 100;
        m_nCores             = 4;
+       m_llc_bnk            = 1;
        m_cpuFIFOSize        = 6;
        m_busFIFOSize        = 6;
        m_cach2Cache         = true;
@@ -211,6 +226,7 @@ public:
        m_dramId             = 200;
        m_dramctrlClkNanoSec = 100;
        m_dramctrlClkSkew    = 0;
+       llc_partition        = "NoPartition";
        
        // read configuration parameters from xml file
        TiXmlElement* rootPtr = root.Element();
@@ -223,10 +239,12 @@ public:
           rootPtr->QueryIntAttribute("RunTillEnd", &m_runTillSimEnd);
           rootPtr->QueryIntAttribute("busClkNanoSec", &m_busClkNanoSec);
           rootPtr->QueryIntAttribute("nCores", &m_nCores);
+          rootPtr->QueryIntAttribute("llc_nbnk", &m_llc_bnk);
           rootPtr->QueryIntAttribute("cpuFIFOSize", &m_cpuFIFOSize);
           rootPtr->QueryIntAttribute("busFIFOSize", &m_busFIFOSize);
-          rootPtr->QueryIntAttribute("Cache2Cache", &m_cach2Cache );     
-          rootPtr->QueryStringAttribute("CohProtocol", &m_cohProtocol); 
+          rootPtr->QueryIntAttribute("Cache2Cache", &m_cach2Cache );
+          rootPtr->QueryStringAttribute("CohProtocol", &m_cohProtocol);
+          rootPtr->QueryStringAttribute("llcPartition", &llc_partition);
           std::cout << "DEBUG COH Protocol Name in XML header: "<< m_cohProtocol << std::endl;
           rootPtr->QueryIntAttribute("OutOfOrderStages", &m_outOfOrderStages);
           

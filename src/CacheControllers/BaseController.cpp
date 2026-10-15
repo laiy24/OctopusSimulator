@@ -10,6 +10,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include "../../header/ExternalCPU.h"
+#include "../../header/AddrMapping.h"
 
 namespace octopus
 {
@@ -22,7 +23,26 @@ namespace octopus
 
         //Parameters initialization
         m_id = std::get<int>(parameters.at(STRINGIFY(m_id)).value);
-        m_shared_memory_id = std::get<int>(parameters.at(STRINGIFY(m_shared_memory_id)).value);
+        if (parameters.find(STRINGIFY(m_shared_memory_id)) != parameters.end())
+        {
+            if (parameters.at(STRINGIFY(m_shared_memory_id)).type == Parameter::Type::Vector_Integer)
+            {
+                m_shared_memory_ids = std::get<vector<int>>(parameters.at(STRINGIFY(m_shared_memory_id)).value);
+                m_shared_memory_id = m_shared_memory_ids.empty() ? -1 : m_shared_memory_ids[0];
+            }
+            else
+            {
+                m_shared_memory_id = std::get<int>(parameters.at(STRINGIFY(m_shared_memory_id)).value);
+                m_shared_memory_ids = { m_shared_memory_id };
+            }
+        }
+        else
+        {
+            m_shared_memory_id = -1;
+        }
+
+        if (parameters.find("bank_index") != parameters.end())
+            m_bank_index = std::get<int>(parameters.at("bank_index").value);
 
         // Optional perfect-LLC knob, defaulted off so existing configs parse and
         // every non-LLC controller (which never sets it) behaves normally.
@@ -178,14 +198,33 @@ namespace octopus
 
         if (m_upper_interface->peekMessage(&msg))
         {
+            if (m_log_role == Logger::Role::LLC &&
+                (AddrMapping::getAddrMapping()->isBanked() ||
+                 AddrMapping::getAddrMapping()->getPartitionSetup() == "SetPartition"))
+            {
+                AddrMapping::getAddrMapping()->addr_map(&msg);
+            }
             msg.source = Message::Source::UPPER_INTERCONNECT;
             traceMsg("intake-upper", msg);
             if (buf.pushFrontOrdered(msg))
                 m_upper_interface->popFrontMessage();
         }
 
-        if (m_lower_interface->peekMessage(&msg))
+        while (m_lower_interface->peekMessage(&msg))
         {
+            if (m_log_role == Logger::Role::LLC &&
+                (AddrMapping::getAddrMapping()->isBanked() ||
+                 AddrMapping::getAddrMapping()->getPartitionSetup() == "SetPartition"))
+            {
+                AddrMapping::getAddrMapping()->addr_map(&msg);
+                if (m_bank_index >= 0 && (int)msg.bank_id != m_bank_index)
+                {
+                    // This request routes to a different bank. Pop and discard from this bank's RX buffer.
+                    m_lower_interface->popFrontMessage();
+                    continue;
+                }
+            }
+
             msg.source = Message::Source::LOWER_INTERCONNECT;
             traceMsg("intake-lower", msg);
             // Only demand requests are subject to the queue bound. Responses and
@@ -201,6 +240,7 @@ namespace octopus
             }
             else
                 m_intake_refusals++;
+            break;
         }
         if (buf.size() > m_queue_peak)
             m_queue_peak = buf.size();
@@ -327,6 +367,11 @@ namespace octopus
                 Logger::getLogger()->event(pending_messages.front().msg_id, m_log_role, (uint32_t)m_id, Logger::Phase::EXIT);
                 Logger::getLogger()->trace(pending_messages.front(), m_log_role, (uint32_t)m_id, Logger::Phase::EXIT);
 
+                if (AddrMapping::getAddrMapping()->isBanked() && m_log_role == Logger::Role::LLC)
+                {
+                    AddrMapping::getAddrMapping()->addr_map_restore(&pending_messages.front(), this->m_bank_index);
+                }
+
                 if (!m_lower_interface->pushMessage(pending_messages.front(), this->m_cache_cycle, MessageType::DATA_RESPONSE))
                 {
                     cout << "CacheController: Cannot insert the Msg into lower interface." << endl;
@@ -370,6 +415,11 @@ namespace octopus
         Logger::getLogger()->event(msg->msg_id, m_log_role, (uint32_t)m_id, Logger::Phase::EXIT);
         Logger::getLogger()->trace(*msg, m_log_role, (uint32_t)m_id, Logger::Phase::EXIT);
 
+        if (AddrMapping::getAddrMapping()->isBanked() && m_log_role == Logger::Role::LLC)
+        {
+            AddrMapping::getAddrMapping()->addr_map_restore(msg, this->m_bank_index);
+        }
+
         if (!m_lower_interface->pushMessage(*msg, this->m_cache_cycle, MessageType::DATA_RESPONSE))
         {
             cout << "CacheController: Cannot insert the Msg into lower interface." << endl;
@@ -401,6 +451,11 @@ namespace octopus
             m_upper_interface->pushMessage2RX(fill, MessageType::DATA_RESPONSE);
             delete msg;
             return;
+        }
+
+        if (AddrMapping::getAddrMapping()->isBanked() && m_log_role == Logger::Role::LLC)
+        {
+            AddrMapping::getAddrMapping()->addr_map_restore(msg, this->m_bank_index);
         }
 
         if (!m_upper_interface->pushMessage(*msg, this->m_cache_cycle, MessageType::REQUEST))
@@ -435,7 +490,7 @@ namespace octopus
                 delete msg;
                 return;
             }
-            msg->to.push_back(this->m_shared_memory_id);
+            msg->to.push_back(this->getLLCDestination(msg->addr, this->m_id));
         }
         else
         {
@@ -449,13 +504,32 @@ namespace octopus
             Logger::getLogger()->trace(*msg, m_log_role, (uint32_t)m_id, Logger::Phase::EXIT);
         }
 
+        if (AddrMapping::getAddrMapping()->isBanked() && m_log_role == Logger::Role::LLC)
+        {
+            AddrMapping::getAddrMapping()->addr_map_restore(msg, this->m_bank_index);
+        }
+
         if (!m_upper_interface->pushMessage(*msg, this->m_cache_cycle, MessageType::DATA_RESPONSE))
         {
             cout << "CacheController: Cannot insert the Msg into BusTxResp FIFO, FIFO is Full" << endl;
             exit(0);
         }
-
         delete msg;
+    }
+
+    int BaseController::getLLCDestination(uint64_t addr, uint16_t owner) const
+    {
+        if (m_log_role != Logger::Role::LLC && AddrMapping::getAddrMapping()->isBanked())
+        {
+            int bank = AddrMapping::getAddrMapping()->get_bnk_bits(addr, owner);
+            if (!m_shared_memory_ids.empty())
+            {
+                if (bank < (int)m_shared_memory_ids.size())
+                    return m_shared_memory_ids[bank];
+            }
+            return AddrMapping::getAddrMapping()->getLLCId(bank);
+        }
+        return m_shared_memory_id;
     }
 
     void BaseController::updateCacheLine(void *data_ptr)

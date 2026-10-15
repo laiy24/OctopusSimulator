@@ -8,6 +8,7 @@
 
 #include "../header/MainMemoryController.h"
 #include "../header/Logger.h"
+#include "../header/AddrMapping.h"
 
 namespace octopus
 {
@@ -18,7 +19,24 @@ namespace octopus
         //Parameters initialization
         m_clk_period = std::get<int>(parameters.at(STRINGIFY(m_clk_period)).value);
         m_id = std::get<int>(parameters.at(STRINGIFY(m_id)).value);
-        m_llc_id = std::get<int>(parameters.at(STRINGIFY(m_llc_id)).value);
+        if (parameters.find(STRINGIFY(m_llc_id)) != parameters.end())
+        {
+            if (parameters.at(STRINGIFY(m_llc_id)).type == Parameter::Type::Vector_Integer)
+            {
+                m_llc_ids = std::get<vector<int>>(parameters.at(STRINGIFY(m_llc_id)).value);
+                m_llc_id = m_llc_ids.empty() ? 10 : m_llc_ids[0];
+            }
+            else
+            {
+                m_llc_id = std::get<int>(parameters.at(STRINGIFY(m_llc_id)).value);
+                m_llc_ids = { m_llc_id };
+            }
+        }
+        else
+        {
+            m_llc_id = 10;
+            m_llc_ids = { 10 };
+        }
         m_memory_latency = std::get<int>(parameters.at(STRINGIFY(m_memory_latency)).value);
 
         // Optional bound on the request buffer. Read from config when present,
@@ -76,7 +94,16 @@ namespace octopus
                                   m_clk_cycle,         // Cycle
                                   0,                   // Complementary_value
                                   ready_msg.owner);    // Owner
-            msg.to.push_back((uint16_t) m_llc_id);     // To
+            int target_llc = m_llc_id;
+            if (AddrMapping::getAddrMapping()->isBanked())
+            {
+                int bank = AddrMapping::getAddrMapping()->get_bnk_bits(ready_msg.addr, ready_msg.owner);
+                if (!m_llc_ids.empty() && bank < (int)m_llc_ids.size())
+                    target_llc = m_llc_ids[bank];
+                else
+                    target_llc = AddrMapping::getAddrMapping()->getLLCId(bank);
+            }
+            msg.to.push_back((uint16_t)target_llc);     // To
             msg.kind = Message::K_FILL;
             msg.copy(return_data);
                     

@@ -28,6 +28,7 @@ namespace octopus
     protected:
         int m_id;
         int m_llc_id;
+        std::vector<int> m_llc_ids;
 
         uint64_t m_clk_cycle;
 

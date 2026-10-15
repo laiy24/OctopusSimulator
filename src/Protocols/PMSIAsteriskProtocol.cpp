@@ -7,6 +7,7 @@
  */
 
 #include "../../header/Protocols/PMSIAsteriskProtocol.h"
+#include "../../header/AddrMapping.h"
 using namespace std;
 
 namespace octopus
@@ -24,6 +25,11 @@ namespace octopus
         MSIProtocol::readEvent(msg, out_id);
 
         if (*out_id == MSIProtocol::EventId::OwnData)
-            *out_id = (MSIProtocol::EventId)((msg.to[0] == this->m_shared_memory_id) ? EventId::RDM : EventId::RDC);
+        {
+            bool from_llc = (!msg.to.empty()) &&
+                            ((msg.to[0] == (uint16_t)this->m_shared_memory_id) ||
+                             AddrMapping::getAddrMapping()->isLLCId(msg.to[0]));
+            *out_id = (MSIProtocol::EventId)(from_llc ? EventId::RDM : EventId::RDC);
+        }
     }
 }

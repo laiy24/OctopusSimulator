@@ -7,6 +7,7 @@
  */
 
 #include "../header/DebugPrint.h"
+#include "../header/AddrMapping.h"
 #include "../header/Logger.h"
 
 using namespace std;
@@ -29,6 +30,10 @@ namespace octopus
         print_clk = std::get<int>(parameters.at(STRINGIFY(print_clk)).value);
         print_msg_id = std::get<int>(parameters.at(STRINGIFY(print_msg_id)).value);
         print_addr = std::get<int>(parameters.at(STRINGIFY(print_addr)).value);
+        print_original_set = std::get<int>(parameters.at(STRINGIFY(print_original_set)).value);
+        print_mapped_set = std::get<int>(parameters.at(STRINGIFY(print_mapped_set)).value);
+        print_original_bank = std::get<int>(parameters.at(STRINGIFY(print_original_bank)).value);
+        print_mapped_bank = std::get<int>(parameters.at(STRINGIFY(print_mapped_bank)).value);
         print_from = std::get<int>(parameters.at(STRINGIFY(print_from)).value);
         print_to = std::get<int>(parameters.at(STRINGIFY(print_to)).value);
         print_owner = std::get<int>(parameters.at(STRINGIFY(print_owner)).value);
@@ -81,6 +86,14 @@ namespace octopus
                     _print("Msg_id,");
                 if(print_addr)
                     _print("Addr,");
+                if(print_original_set)
+                    _print("OriginalSet,");
+                if(print_mapped_set)
+                    _print("MappedSet,");
+                if(print_original_bank)
+                    _print("OriginalBank,");
+                if(print_mapped_bank)
+                    _print("MappedBank,");
                 if(print_from)
                     _print("From,");
                 if(print_to)
@@ -143,6 +156,18 @@ namespace octopus
                 _print("%lld,", msg->msg_id);
             if(print_addr)
                 _print("%lld,", msg->addr);
+            if(print_original_set)
+                _print("%u,", msg->address_mapping_recorded ? msg->original_set :
+                       AddrMapping::getAddrMapping()->getSetBits(msg->addr, msg->owner));
+            if(print_mapped_set)
+                _print("%u,", msg->address_mapping_recorded ? msg->mapped_set :
+                       AddrMapping::getAddrMapping()->getSetBits(msg->addr, msg->owner));
+            if(print_original_bank)
+                _print("%u,", msg->address_mapping_recorded ? msg->original_bank :
+                       AddrMapping::getAddrMapping()->getBankBits(msg->addr, msg->owner));
+            if(print_mapped_bank)
+                _print("%u,", msg->address_mapping_recorded ? msg->mapped_bank :
+                       AddrMapping::getAddrMapping()->getBankBits(msg->addr, msg->owner));
             if(print_from)
                 _print("%lld,", msg->from);
             if(print_to)
@@ -165,6 +190,14 @@ namespace octopus
             if(print_msg_id)
                 _print(",");
             if(print_addr)
+                _print(",");
+            if(print_original_set)
+                _print(",");
+            if(print_mapped_set)
+                _print(",");
+            if(print_original_bank)
+                _print(",");
+            if(print_mapped_bank)
                 _print(",");
             if(print_from)
                 _print(",");

@@ -31,6 +31,7 @@ namespace octopus
     protected:
         vector<CommunicationInterface *> m_interfaces;
         vector<int> m_lower_level_ids;
+        vector<int> m_upper_level_cache_ids;
         map<int, vector<int>> m_topology;
 
         BusController* interconnect_controller;
@@ -56,6 +57,8 @@ namespace octopus
         void setMemBus() { if (interconnect_controller) interconnect_controller->setMemBus(); }
 
         vector<int> *getLowerLevelIds();
+        vector<int> *getUpperLevelCacheIds() { return &m_upper_level_cache_ids; }
+        const vector<int> &getUpperLevelIds() const { return m_upper_level_cache_ids; }
         
         virtual void init();
     };

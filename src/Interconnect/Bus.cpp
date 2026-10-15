@@ -18,7 +18,7 @@ namespace octopus
 
         //Parameters initialization
         m_lower_level_ids = std::get<vector<int>>(parameters.at(STRINGIFY(m_lower_level_ids)).value);
-        vector<int> upper_level_cache_ids = std::get<vector<int>>(parameters.at(STRINGIFY(upper_level_cache_ids)).value);
+        m_upper_level_cache_ids = std::get<vector<int>>(parameters.at(STRINGIFY(upper_level_cache_ids)).value);
         string controller_type = std::get<string>(parameters.at(STRINGIFY(controller_type)).value);
         int buffers_max_size = std::get<int>(parameters.at(STRINGIFY(buffers_max_size)).value);
         m_clk_period = std::get<int>(parameters.at(STRINGIFY(m_clk_period)).value);
@@ -27,7 +27,7 @@ namespace octopus
 
         dprint = new DebugPrint(getSubMap(STRINGIFY(dprint)), name, parent_name + "." + name);
 
-        for (auto id : upper_level_cache_ids)
+        for (auto id : m_upper_level_cache_ids)
             m_interfaces.push_back(new BusInterface(id, buffers_max_size));
 
         for (auto id : m_lower_level_ids)

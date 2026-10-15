@@ -32,6 +32,15 @@ public:
     uint16_t owner = 0;
     uint16_t from = 0;
 
+    // used for bank and set partitioning
+    uint16_t llc_addr_restore = 0;
+    uint8_t bank_id = 0;
+    uint32_t original_set = 0;
+    uint32_t mapped_set = 0;
+    uint32_t original_bank = 0;
+    uint32_t mapped_bank = 0;
+    bool address_mapping_recorded = false;
+
     std::vector<uint16_t> to;
 
     enum Source
@@ -92,6 +101,13 @@ public:
         to = M2.to;
         data_size = M2.data_size;
         kind = M2.kind;
+        bank_id = M2.bank_id;
+        llc_addr_restore = M2.llc_addr_restore;
+        original_set = M2.original_set;
+        mapped_set = M2.mapped_set;
+        original_bank = M2.original_bank;
+        mapped_bank = M2.mapped_bank;
+        address_mapping_recorded = M2.address_mapping_recorded;
 
         if (M2.data != NULL)
             this->copy(M2.data, M2.data_size);

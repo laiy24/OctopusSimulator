@@ -1,0 +1,9 @@
+num_llc_banks(i),1,,#Number of LLC banks (1 = unbanked)
+partition_setup(s),NoPartition,,#Partitioning scheme: NoPartition, BankPartition, SetPartition, Custom
+num_dedicated_cores(i),0,,#Number of dedicated cores for bank/set partitioning
+banks_per_dedicated_core(i),0,,#Banks per dedicated core (0 = automatic)
+dedicated_core_ids(vi),,,#List of dedicated core IDs
+m_block_size(i),64,,#Cache line size in bytes
+cache_size(i),524288,,#Bank size in bytes
+m_ways_count(i),8,,#Ways count per bank
+num_cores(i),4,,#Total number of cores

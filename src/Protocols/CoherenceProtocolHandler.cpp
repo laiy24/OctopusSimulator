@@ -7,6 +7,7 @@
  */
 
 #include "../../header/Protocols/CoherenceProtocolHandler.h"
+#include "../../header/AddrMapping.h"
 using namespace std;
 
 namespace octopus
@@ -30,5 +31,15 @@ namespace octopus
         //of the invalid state is different than "I"
         int initState = this->m_fsm->getState(string("I"));
         m_data_handler->initializeCacheStates(initState);
+    }
+
+    int CoherenceProtocolHandler::getLLCDestination(uint64_t addr, uint16_t owner) const
+    {
+        if (AddrMapping::getAddrMapping()->isBanked() && !AddrMapping::getAddrMapping()->isLLCId(this->m_id))
+        {
+            int bank = AddrMapping::getAddrMapping()->get_bnk_bits(addr, owner);
+            return AddrMapping::getAddrMapping()->getLLCId(bank);
+        }
+        return m_shared_memory_id;
     }
 }

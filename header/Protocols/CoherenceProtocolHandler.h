@@ -50,6 +50,8 @@ namespace octopus
         // fill). A pipelined array defers such a message as a whole, so the
         // state changes only when the bytes have moved. Default: unknown.
         virtual bool needsDataArray(const Message &msg) { return false; }
+
+        int getLLCDestination(uint64_t addr, uint16_t owner) const;
     };
 }
 

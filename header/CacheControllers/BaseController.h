@@ -36,6 +36,8 @@ namespace octopus
     protected:
         int m_id;
         int m_shared_memory_id;
+        std::vector<int> m_shared_memory_ids;
+        int m_bank_index = -1;
 
         // Perfect-LLC knob (default 0 = off). When 1, this controller never issues
         // to the memory above it: a miss's fetch is synthesized locally and looped
@@ -144,6 +146,11 @@ namespace octopus
 
         // Design B: tag this controller's logging role (e.g. LLC). Default is L1.
         void setLogRole(Logger::Role role) { m_log_role = role; }
+
+        void setBankIndex(int idx) { m_bank_index = idx; }
+        int getBankIndex() const { return m_bank_index; }
+        const std::vector<int> &getSharedMemoryIds() const { return m_shared_memory_ids; }
+        int getLLCDestination(uint64_t addr, uint16_t owner) const;
 
         virtual void initialize(uint64_t address, const uint8_t* data, int size) {} //for Initializable
         virtual void read(uint64_t address, uint8_t* data) {} //for Initializable

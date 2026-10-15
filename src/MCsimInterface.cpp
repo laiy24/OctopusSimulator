@@ -10,14 +10,20 @@
 #include "../header/MCsimInterface.h"
 #include "../header/Logger.h"
 #include "../header/RequestorsQueues.h"
-
-using namespace std;
+#include "../header/AddrMapping.h"
 
 using namespace std;
 
 namespace octopus
 {
     MCsimInterface::MCsimInterface(CommunicationInterface *lower_interface, int dram_id, int llc_id,
+                                   int num_cores, int block_size, uint64_t clk_period,
+                                   const std::string &mem_system)
+        : MCsimInterface(lower_interface, dram_id, std::vector<int>{ llc_id }, num_cores, block_size, clk_period, mem_system)
+    {
+    }
+
+    MCsimInterface::MCsimInterface(CommunicationInterface *lower_interface, int dram_id, const std::vector<int> &llc_ids,
                                    int num_cores, int block_size, uint64_t clk_period,
                                    const std::string &mem_system)
         : ClockedObj(clk_period) // == LLC period: one tick per core cycle (see header). Must be
@@ -30,7 +36,8 @@ namespace octopus
             exit(0);
         }
         m_id = dram_id;
-        m_llc_id = llc_id;
+        m_llc_ids = llc_ids;
+        m_llc_id = llc_ids.empty() ? 10 : llc_ids[0];
         m_clk_cycle = 1;
         m_llc_line_size = block_size;
         m_read_count = 0;
@@ -170,7 +177,16 @@ namespace octopus
                                       m_clk_cycle,                  // Cycle
                                       0,                            // Complementary_value
                                       m_pending_requests[i].owner); // Owner
-                msg.to.push_back((uint16_t)m_llc_id);               // To (back to the LLC)
+                int target_llc = m_llc_id;
+                if (AddrMapping::getAddrMapping()->isBanked())
+                {
+                    int bank = AddrMapping::getAddrMapping()->get_bnk_bits(m_pending_requests[i].addr, m_pending_requests[i].owner);
+                    if (!m_llc_ids.empty() && bank < (int)m_llc_ids.size())
+                        target_llc = m_llc_ids[bank];
+                    else
+                        target_llc = AddrMapping::getAddrMapping()->getLLCId(bank);
+                }
+                msg.to.push_back((uint16_t)target_llc);               // To (back to the LLC)
                 msg.kind = Message::K_FILL;
                 msg.copy(data_buffer);
                 m_output_buffer.push_back(msg);

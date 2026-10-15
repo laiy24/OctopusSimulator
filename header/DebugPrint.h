@@ -34,7 +34,8 @@ namespace octopus
         int print_preamble;
 
         int print_name, print_clk, print_msg_id;
-        int print_addr, print_from, print_to;
+        int print_addr, print_original_set, print_mapped_set;
+        int print_original_bank, print_mapped_bank, print_from, print_to;
         int print_owner;
 
         string addr_filter;

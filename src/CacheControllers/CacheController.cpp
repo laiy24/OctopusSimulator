@@ -224,11 +224,12 @@ namespace octopus
             // Snooping only: see deferredSupplyCopiesToLLC(). Under a directory the home
             // is told about the transfer by the protocol itself, and an extra unsolicited
             // data copy is a transaction its FSM has no row for.
+            uint16_t llc_dest = (uint16_t)getLLCDestination(msg->addr, this->m_id);
             bool has_llc = false;
-            for (uint16_t t : msg->to) if (t == (uint16_t)m_shared_memory_id) has_llc = true;
+            for (uint16_t t : msg->to) if (t == llc_dest) has_llc = true;
             if (deferredSupplyCopiesToLLC() &&
                 saved.front().complementary_value == MSIProtocol::REQUEST_TYPE_GETS && !has_llc)
-                msg->to.push_back((uint16_t)m_shared_memory_id);
+                msg->to.push_back(llc_dest);
             for (size_t i = 1; i < saved.size(); i++)
             {
                 msg->to.push_back(saved[i].owner);
@@ -549,7 +550,7 @@ namespace octopus
                           m_cache_cycle,                       // Cycle
                           0,                                   // Complementary_value
                           (uint16_t)this->m_id);               // Owner
-            msg.to.push_back((uint16_t)this->m_shared_memory_id);
+            msg.to.push_back((uint16_t)this->getLLCDestination(evicted_address, this->m_id));
             msg.source = Message::Source::SELF;
             msg.kind = Message::K_EVICT;
             // force=true: a write-back must be admitted to drain the PWB. It is

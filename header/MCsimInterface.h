@@ -29,6 +29,7 @@ namespace octopus
     protected:
         int m_id;
         int m_llc_id;
+        std::vector<int> m_llc_ids;
         int m_llc_line_size;
 
         uint64_t m_clk_cycle;
@@ -61,6 +62,9 @@ namespace octopus
         // cycle. A smaller period over-clocks DRAM relative to the cores (period 1 with
         // 100-tick cores made a 40-DRAM-cycle access complete within one core cycle).
         MCsimInterface(CommunicationInterface *lower_interface, int dram_id, int llc_id,
+                       int num_cores, int block_size, uint64_t clk_period,
+                       const std::string &mem_system = "FRFCFS");
+        MCsimInterface(CommunicationInterface *lower_interface, int dram_id, const std::vector<int> &llc_ids,
                        int num_cores, int block_size, uint64_t clk_period,
                        const std::string &mem_system = "FRFCFS");
         ~MCsimInterface();

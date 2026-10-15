@@ -22,6 +22,7 @@ add_library(Octopus_core
             CLParser.cpp
             DebugPrint.cpp
             RequestorsQueues.cpp
+            AddrMapping.cpp
     )
 
     add_subdirectory(Arbiters)

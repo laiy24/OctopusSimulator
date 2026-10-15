@@ -33,6 +33,14 @@ namespace octopus
         if (parameters.count(STRINGIFY(cpu_type)))
             cpu_type = std::get<string>(parameters.at(STRINGIFY(cpu_type)).value);
 
+        int num_llc_banks = 1;
+        if (parameters.count(STRINGIFY(num_llc_banks)))
+            num_llc_banks = std::get<int>(parameters.at(STRINGIFY(num_llc_banks)).value);
+
+        string llc_partition = "NoPartition";
+        if (parameters.count(STRINGIFY(llc_partition)))
+            llc_partition = std::get<string>(parameters.at(STRINGIFY(llc_partition)).value);
+
         //Constructor
         Bus *bus[bus_type.size()];
         for(int i = 0; i < bus_type.size(); i++)
@@ -51,6 +59,76 @@ namespace octopus
         // Design B: bus[1] is the LLC<->DRAM bus; its crossings log as MEM_BUS.
         if (bus_type.size() > 1)
             bus[1]->setMemBus();
+
+        // Initialize AddrMapping for banked LLC and routing
+        ParametersMap addr_map_params = getSubMap(STRINGIFY(addr_mapping));
+        addr_map_params.erase("num_llc_banks");
+        addr_map_params.emplace("num_llc_banks", Parameter("num_llc_banks", Parameter::Type::Integer, num_llc_banks));
+        addr_map_params.erase("partition_setup");
+        addr_map_params.emplace("partition_setup", Parameter("partition_setup", Parameter::Type::String, llc_partition));
+        addr_map_params.erase("num_cores");
+        addr_map_params.emplace("num_cores", Parameter("num_cores", Parameter::Type::Integer, num_cores));
+        if (parameters.count("num_dedicated_cores"))
+        {
+            addr_map_params.erase("num_dedicated_cores");
+            addr_map_params.emplace("num_dedicated_cores", parameters.at("num_dedicated_cores"));
+        }
+        if (parameters.count("dedicated_core_ids"))
+        {
+            addr_map_params.erase("dedicated_core_ids");
+            addr_map_params.emplace("dedicated_core_ids", parameters.at("dedicated_core_ids"));
+        }
+        if (parameters.count("banks_per_dedicated_core"))
+        {
+            addr_map_params.erase("banks_per_dedicated_core");
+            addr_map_params.emplace("banks_per_dedicated_core", parameters.at("banks_per_dedicated_core"));
+        }
+
+        auto llc_sub0 = getSubMap(STRINGIFY(llc_controller), num_llc_banks > 1 ? 0 : -1);
+        if (llc_sub0.count("m_data_handler.m_block_size"))
+        {
+            addr_map_params.erase("m_block_size");
+            addr_map_params.emplace("m_block_size", llc_sub0.at("m_data_handler.m_block_size"));
+        }
+        if (llc_sub0.count("m_data_handler.cache_size"))
+        {
+            addr_map_params.erase("cache_size");
+            addr_map_params.emplace("cache_size", llc_sub0.at("m_data_handler.cache_size"));
+        }
+        if (llc_sub0.count("m_data_handler.m_ways_count"))
+        {
+            addr_map_params.erase("m_ways_count");
+            addr_map_params.emplace("m_ways_count", llc_sub0.at("m_data_handler.m_ways_count"));
+        }
+
+        AddrMapping *addr_map = AddrMapping::initAddrMapping(addr_map_params, string(CONFIGURATION_PATH), STRINGIFY(addr_mapping), name);
+
+        vector<int> llc_ids;
+        if (num_llc_banks > 1)
+        {
+            const vector<int> &bus0_upper = bus[0]->getUpperLevelIds();
+            for (int b = 0; b < num_llc_banks; b++)
+            {
+                auto sub = getSubMap(STRINGIFY(llc_controller), b);
+                if (sub.count("m_id"))
+                    llc_ids.push_back(std::get<int>(sub.at("m_id").value));
+                else if (b < (int)bus0_upper.size())
+                    llc_ids.push_back(bus0_upper[b]);
+                else
+                    llc_ids.push_back(50 + b);
+            }
+        }
+        else
+        {
+            auto sub = getSubMap(STRINGIFY(llc_controller));
+            int single_id = 10;
+            if (sub.count("m_id"))
+                single_id = std::get<int>(sub.at("m_id").value);
+            else if (!bus[0]->getUpperLevelIds().empty())
+                single_id = bus[0]->getUpperLevelIds()[0];
+            llc_ids.push_back(single_id);
+        }
+        addr_map->set_llc_ids(llc_ids);
 
         // iterate over each core
         for (int i = 0; i < num_cores; i++)
@@ -90,13 +168,19 @@ namespace octopus
             }
         }
 
-        BaseController *llc_controller;
-        int llc_id = std::get<int>(getSubMap(STRINGIFY(llc_controller)).at("m_id").value);
-        llc_controller = createController(llc_controller_type,
-                                          getSubMap(STRINGIFY(llc_controller)),
-                                          bus[1]->getInterfaceFor(llc_id),
-                                          bus[0]->getInterfaceFor(llc_id), name);
-        llc_controller->setLogRole(Logger::Role::LLC);   // Design B: tag LLC events
+        vector<BaseController *> llc_controllers;
+        for (int b = 0; b < num_llc_banks; b++)
+        {
+            ParametersMap sub = (num_llc_banks > 1) ? getSubMap(STRINGIFY(llc_controller), b)
+                                                    : getSubMap(STRINGIFY(llc_controller));
+            int llc_id = llc_ids[b];
+            BaseController *ctrl = createController(llc_controller_type, sub,
+                                                    bus[1]->getInterfaceFor(llc_id),
+                                                    bus[0]->getInterfaceFor(llc_id), name);
+            ctrl->setLogRole(Logger::Role::LLC);   // Design B: tag LLC events
+            ctrl->setBankIndex(b);
+            llc_controllers.push_back(ctrl);
+        }
 
         // Main memory: the basic MainMemoryController by default, or the MCsim DRAM
         // simulator when `main_memory_type=MCsim` (configured for DDR4 in MCsimInterface).
@@ -110,12 +194,15 @@ namespace octopus
             string mem_system = "FRFCFS";
             if (parameters.count(STRINGIFY(mcsim_scheduler)))
                 mem_system = std::get<string>(parameters.at(STRINGIFY(mcsim_scheduler)).value);
-            new MCsimInterface(bus[1]->getInterfaceFor(main_memory_id), main_memory_id, llc_id,
-                               num_cores, /*block_size=*/64, llc_controller->getClkPeriod(), mem_system);
+            new MCsimInterface(bus[1]->getInterfaceFor(main_memory_id), main_memory_id, llc_ids,
+                               num_cores, /*block_size=*/64, llc_controllers[0]->getClkPeriod(), mem_system);
         }
         else
         {
-            new MainMemoryController(getSubMap(STRINGIFY(MainMemoryController)), bus[1]->getInterfaceFor(main_memory_id), name);
+            auto mem_map = getSubMap(STRINGIFY(m_main_memory));
+            if (mem_map.empty())
+                mem_map = getSubMap(STRINGIFY(MainMemoryController));
+            new MainMemoryController(mem_map, bus[1]->getInterfaceFor(main_memory_id), name);
         }
 
         Logger::getLogger()->registerReportPath(workload_path + string("/newLogger"));

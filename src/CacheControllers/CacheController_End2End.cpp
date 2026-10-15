@@ -7,6 +7,7 @@
  */
 
 #include "../../header/CacheControllers/CacheController_End2End.h"
+#include "../../header/AddrMapping.h"
 
 namespace octopus
 {
@@ -41,13 +42,19 @@ namespace octopus
     {
         Message *msg = (Message *)data_ptr;
         Message returned_msg;
+        uint64_t phys_addr = msg->addr;
+        if (AddrMapping::getAddrMapping()->isBanked())
+        {
+            phys_addr = AddrMapping::getAddrMapping()->addr_map_restore(msg->addr, this->m_bank_index);
+        }
 
-        if(m_upper_interface->rollback(msg->addr, m_data_handler->getBlockSize(), &returned_msg))
+        if(m_upper_interface->rollback(phys_addr, m_data_handler->getBlockSize(), &returned_msg))
         {
             if(returned_msg.data != NULL)
             {
                 msg->copy(returned_msg.data);
                 msg->kind = Message::K_FILL_ROLLBACK;
+                msg->addr = phys_addr;
                 m_upper_interface->pushMessage2RX(*msg, MessageType::DATA_RESPONSE);
             }
             else
@@ -91,6 +98,11 @@ namespace octopus
         msg->owner = (m_owner_of_latest_data > -1) ? m_owner_of_latest_data : this->m_id;
         msg->to.push_back(this->m_shared_memory_id);
 
+        if (AddrMapping::getAddrMapping()->isBanked())
+        {
+            AddrMapping::getAddrMapping()->addr_map_restore(msg, this->m_bank_index);
+        }
+
         if (!m_upper_interface->pushMessage(*msg, this->m_cache_cycle, MessageType::DATA_RESPONSE))
         {
             cout << "CacheController: Cannot insert the Msg into BusTxResp FIFO, FIFO is Full" << endl;
@@ -104,6 +116,11 @@ namespace octopus
     {
         Message *msg = (Message *)data_ptr;
         msg->cycle = this->m_cache_cycle;
+
+        if (AddrMapping::getAddrMapping()->isBanked())
+        {
+            AddrMapping::getAddrMapping()->addr_map_restore(msg, this->m_bank_index);
+        }
 
         if (!m_lower_interface->pushMessage(*msg, this->m_cache_cycle, MessageType::SERVICE_REQUEST))
         {

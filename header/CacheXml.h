@@ -29,7 +29,8 @@ private:
   string m_replcPolicy;
   int m_cachePreload;
   int dataAccessLatency;
-  
+  int m_llc_bnk;
+
 public:
 
   void SetCacheId (int cacheId) {
@@ -112,7 +113,15 @@ public:
   int GetDataAccessLatency () {
     return dataAccessLatency;
   }
-  
+
+  int GetLLCBnk () {
+    return m_llc_bnk;
+  }
+
+  void SetLLCBnk (int llc_bnk) {
+    m_llc_bnk = llc_bnk;
+  }
+
   void LoadFromXml(TiXmlHandle root) {
 
      // default values
@@ -130,13 +139,15 @@ public:
      m_nPendingReq     = 1;
      m_cachePreload    = 0;
      dataAccessLatency = 0;
-     
+     m_llc_bnk         = 1;
+
      TiXmlElement* CacheRootPtr = root.Element();
      CacheRootPtr->QueryIntAttribute   ("cacheId"          , &m_cacheId         );
      CacheRootPtr->QueryIntAttribute   ("cpuClkNanoSec"    , &m_cpuClkNanoSec   );
      CacheRootPtr->QueryIntAttribute   ("cpuClkSkew"       , &m_cpuClkSkew      );
      CacheRootPtr->QueryIntAttribute   ("ctrlClkNanoSec"   , &m_ctrlClkNanoSec  );
      CacheRootPtr->QueryIntAttribute   ("ctrlClkSkew"      , &m_ctrlClkSkew     );
+     CacheRootPtr->QueryIntAttribute   ("llc_nbnk"         , &m_llc_bnk         );
      CacheRootPtr->QueryIntAttribute   ("NPendReq"         , &m_nPendingReq     );     
      CacheRootPtr->QueryIntAttribute   ("reqWbRatio"       , &m_reqWbRatio      );
      CacheRootPtr->QueryStringAttribute("ReplcPolc"        , &m_replcPolicy     );

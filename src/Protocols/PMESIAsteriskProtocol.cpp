@@ -7,6 +7,7 @@
  */
 
 #include "../../header/Protocols/PMESIAsteriskProtocol.h"
+#include "../../header/AddrMapping.h"
 using namespace std;
 
 namespace octopus
@@ -23,8 +24,11 @@ namespace octopus
     {
         MESIProtocol::readEvent(msg, out_id);
 
+        bool from_llc = (!msg.to.empty()) &&
+                        ((msg.to[0] == (uint16_t)this->m_shared_memory_id) ||
+                         AddrMapping::getAddrMapping()->isLLCId(msg.to[0]));
         if ((MESIProtocol::EventId)*out_id == MESIProtocol::EventId::OwnData)
-            *out_id = (MSIProtocol::EventId)((msg.to[0] == this->m_shared_memory_id) ? EventId::RDM : EventId::RDC);
+            *out_id = (MSIProtocol::EventId)(from_llc ? EventId::RDM : EventId::RDC);
         else if ((MESIProtocol::EventId)*out_id == MESIProtocol::EventId::OwnData_Execlusive)
             *out_id = (MSIProtocol::EventId) EventId::RDM_Execlusive;
     }

@@ -225,6 +225,21 @@ Reusing an output directory overwrites reports with matching names. For example:
   -p "bus[0].interconnect_controller.arbiter_type(s)=RRArbiter"
 ```
 
+GRROF coordinates the cache-bus arbiter with the MCsim request scheduler. Select
+`RROFArbiter` for the interconnect and `RROF` for `mcsim_scheduler`:
+
+```sh
+./build/Octopus_Simulator -s MultiCoreSystem -o results/grrof \
+  -p "main_memory_type(s)=MCsim" \
+  -p "mcsim_scheduler(s)=RROF" \
+  -p "bus[0].interconnect_controller.arbiter_type(s)=RROFArbiter"
+```
+
+The cache-side arbiter uses the shared `RequestorsQueues` instance when a
+request has reached MCsim. Cache hits and requests still entering MCsim fall
+back to oldest-first ordering so they cannot deadlock while waiting for a
+memory-queue entry.
+
 `Summary_transposed.csv` presents the same summary values with metrics as rows
 and cores as columns, ordered by core ID. `Summary.csv` retains its existing
 format for scripts and the visualizer.

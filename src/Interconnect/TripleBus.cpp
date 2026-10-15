@@ -13,14 +13,14 @@ namespace octopus
     TripleBus::TripleBus(ParametersMap map, string pname, string config_path, string name) : Bus(map, NULL, pname, config_path, name)
     {
         //Parameters initialization
-        vector<int> upper_level_cache_ids = std::get<vector<int>>(parameters.at(STRINGIFY(upper_level_cache_ids)).value);
+        m_upper_level_cache_ids = std::get<vector<int>>(parameters.at(STRINGIFY(upper_level_cache_ids)).value);
         int buffers_max_size = std::get<int>(parameters.at(STRINGIFY(buffers_max_size)).value);
        
        //Constructor
        m_interfaces.clear();
        m_topology.clear();
 
-        for (auto id : upper_level_cache_ids)
+        for (auto id : m_upper_level_cache_ids)
             m_interfaces.push_back(new TripleBusInterface(id, buffers_max_size));
 
         for (auto id : m_lower_level_ids)

@@ -26,6 +26,7 @@
 #include "CacheControllerDirectory.h"
 #include "MainMemoryController.h"
 #include "MCsimInterface.h"
+#include "AddrMapping.h"
 
 #include <vector>
 #include <string>
