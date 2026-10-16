@@ -156,12 +156,26 @@ namespace octopus
             else
             {
                 // Non-dedicated cores share the banks below the dedicated ranges.
-                // Reduce the original bank selection modulo the size of that
-                // shared region so it cannot enter a dedicated core's banks.
+                // Keep banks in the shared range unchanged. For an address whose
+                // original bank is in the dedicated range, fold it into the
+                // shared range using the original set as a second dimension.
+                // A plain modulo would map every such address to the same bank
+                // (for example, bank N-1 to bank 0).
                 unsigned int num_ded = m_dedicated_core_ids.empty() ? m_num_dedicated_cores : (int)m_dedicated_core_ids.size();
                 unsigned int num_shared = m_llc_nbnks - num_ded * num_bnk_per_core;
                 if (num_shared > 0)
-                    bnk_bits = bnk_bits % num_shared;
+                {
+                    // bnk_bits = bnk_bits % num_shared; // original mapping rule but this will cause all addresses that map to the dedicated banks to be mapped to the same shared bank (bank 0)
+                    if (bnk_bits >= num_shared)
+                    {
+                        unsigned int total_num_sets = (m_cl_size > 0 && m_nway > 0)
+                                                          ? (m_bnk_size / m_cl_size / m_nway)
+                                                          : 1;
+                        unsigned int set_bits = (addr >> (offset_bits + (unsigned int)std::log2(m_llc_nbnks))) &
+                                                (total_num_sets - 1);
+                        bnk_bits = (bnk_bits - num_shared + set_bits) % num_shared;
+                    }
+                }
             }
         }
         return bnk_bits % m_llc_nbnks;
@@ -212,7 +226,15 @@ namespace octopus
                 unsigned int num_ded = m_dedicated_core_ids.empty() ? m_num_dedicated_cores : (int)m_dedicated_core_ids.size();
                 unsigned int num_shared = total_num_sets - num_ded * num_set_per_core;
                 if (num_shared > 0)
-                    set_bits = set_bits % num_shared;
+                {
+                    // set_bits = set_bits % num_shared; // original mapping rule but this will cause all addresses that map to the dedicated sets to be mapped to the same shared set (set 0)
+                    if (set_bits >= num_shared)
+                    {
+                        unsigned int original_bank = (addr >> offset_bits) &
+                                                     (m_llc_nbnks > 0 ? m_llc_nbnks - 1 : 0);
+                        set_bits = (set_bits - num_shared + original_bank) % num_shared;
+                    }
+                }
             }
         }
         return set_bits;
