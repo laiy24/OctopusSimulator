@@ -5,6 +5,7 @@ from m5.objects import (
     SystemXBar,
     AddrRange,
     Octopus,
+    ProfileGen
 )
 
 from gem5.components.boards.abstract_board import AbstractBoard
@@ -40,6 +41,7 @@ class OctopusCacheHierarchy(AbstractClassicCacheHierarchy):
         self.membus = SystemXBar(width=64)
         if atp_files is not None:
             self._useATP = True
+            self.atp_adaptor = ProfileGen(config_files=atp_files, exit_when_done=False, trace_atp=False, init_only=True)
 
     def _bridge(self, cache_id, core):
         return Octopus(
@@ -93,7 +95,7 @@ class OctopusCacheHierarchy(AbstractClassicCacheHierarchy):
         if self._useATP:
             base = 2 * n
             self.atp_caches = [
-                self._bridge(base + i)
+                self._bridge(base + i, i)
                 for i in range(len(self.atp_adaptor.config_files))
             ]
             for i in range(len(self.atp_adaptor.config_files)):
@@ -108,7 +110,7 @@ class OctopusCacheHierarchy(AbstractClassicCacheHierarchy):
             data_latency=50,
             response_latency=50,
             mshrs=20,
-            size="1kB",
+            size="1KiB",
             tgts_per_mshr=12,
             addr_ranges=board.mem_ranges,
         )
