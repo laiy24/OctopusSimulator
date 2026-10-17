@@ -51,7 +51,7 @@ namespace MCsim
 		RequestorsQueues requestorsQueues;
 			unsigned int counter =0;
 	protected:
-		static Request *hitRequest;
+		vector<Request *> hitRequests;
 
 	private:
 		// General Information

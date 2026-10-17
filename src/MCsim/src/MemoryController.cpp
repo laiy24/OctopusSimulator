@@ -27,7 +27,6 @@ static FILE *mcsim_probe()
 
 using namespace MCsim;
 
-MCsim::Request *MemoryController::hitRequest = NULL;
 MemoryController::MemoryController(const string &systemConfigFile, function<void(Request &)> callback) : callback(callback)
 {
 	// Assign values to parameters based on configuration file
@@ -150,6 +149,11 @@ MemoryController::~MemoryController() // dtor
 	commandQueue.clear();
 	pendingReadRequest.clear();
 	pendingWriteRequest.clear();
+	for (auto req : hitRequests)
+	{
+		delete req;
+	}
+	hitRequests.clear();
 	requestorsQueues.clearRequests();
 	myTrace.close();
 }
@@ -266,12 +270,12 @@ bool MemoryController::addRequest(unsigned int requestorID, unsigned long long a
 	if (FILE *pf = mcsim_probe())
 		fprintf(pf, "%llu ADD req=%u addr=%llu rw=%d id=%llu\n", (unsigned long long)clockCycle,
 		        requestorID, (unsigned long long)address, (int)R_W, (unsigned long long)reqID);
-	if (hitRequest != NULL)
+	for (auto req : hitRequests)
 	{
-		//callback(*hitRequest); // return read data
-		returnReadData(hitRequest);
-		hitRequest = NULL;
+		returnReadData(req);
+		delete req;
 	}
+	hitRequests.clear();
 	
 	string type = "write";
 	if (R_W)
@@ -308,8 +312,7 @@ bool MemoryController::addRequest(unsigned int requestorID, unsigned long long a
 				checkRequest = requestQueue[queueIndex]->checkRequestIndex (requestor,request);
 				if ((checkRequest->address == address) && (checkRequest->requestType == DATA_WRITE))
 				{
-					hitRequest = NULL;
-					hitRequest = incomingRequest;
+					hitRequests.push_back(incomingRequest);
 					return true;
 				}
 			}
@@ -449,6 +452,13 @@ void MemoryController::update()
 	requestScheduler->step();
 	commandScheduler->tick();
 	clockCycle++;
+
+	for (auto req : hitRequests)
+	{
+		returnReadData(req);
+		delete req;
+	}
+	hitRequests.clear();
 
 	// ============ Stats Tracker ===================
 	stats.close_counter++;
