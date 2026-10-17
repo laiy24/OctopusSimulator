@@ -310,7 +310,6 @@ bool MemoryController::addRequest(unsigned int requestorID, unsigned long long a
 				{
 					hitRequest = NULL;
 					hitRequest = incomingRequest;
-					cout << "MCsim: Request hit in MC: "<< incomingRequest->reqID<<" WR: "<< (unsigned long long)checkRequest->reqID << " type: " << checkRequest->requestType << " " << checkRequest->address << " "<< address << endl;
 					return true;
 				}
 			}
