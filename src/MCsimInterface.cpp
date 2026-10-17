@@ -191,6 +191,16 @@ namespace octopus
                 msg.copy(data_buffer);
                 m_output_buffer.push_back(msg);
 
+                MCsim::RequestorsQueues *requestors_queues = RequestorsQueues::getRequestorsQueues();
+                if (requestors_queues != nullptr &&
+                    requestors_queues->isRequestExist(m_pending_requests[i].owner,
+                                                      (unsigned int)m_pending_requests[i].msg_id,
+                                                      nullptr, nullptr) >= 0)
+                {
+                    requestors_queues->removeRequest(m_pending_requests[i].owner,
+                                                     (unsigned int)m_pending_requests[i].msg_id);
+                }
+
                 m_pending_requests.erase(m_pending_requests.begin() + i);
                 found = true;
                 break;

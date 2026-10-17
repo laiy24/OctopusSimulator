@@ -19,6 +19,7 @@
 #include "RequestType.h"
 
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 #include <fstream>
@@ -78,6 +79,10 @@ namespace octopus
         size_t m_job_next = 0;
         uint64_t m_rng = 0;
         static int s_finite_cores_running;             // cores with a finite job count / trace still running
+
+        uint64_t m_request_timeout_ticks = 0;
+        std::map<uint64_t, uint64_t> m_inflight_requests;
+        std::set<uint64_t> m_warned_requests;
 
         virtual void cycleProcess();
         virtual void processLogic();

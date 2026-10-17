@@ -31,6 +31,9 @@ namespace octopus
         if (parameters.find(STRINGIFY(log_requests)) != parameters.end())
             m_log_requests = std::get<int>(parameters.at(STRINGIFY(log_requests)).value) != 0;
 
+        if (parameters.find(STRINGIFY(request_timeout_ticks)) != parameters.end())
+            m_request_timeout_ticks = (uint64_t)std::get<int>(parameters.at(STRINGIFY(request_timeout_ticks)).value);
+
         m_id = id;
         m_clk_cycle = 1;
         m_upper_interface = upper_interface;
@@ -44,6 +47,17 @@ namespace octopus
     void ExternalCPU::cycleProcess()
     {
         processLogic();
+        if (m_request_timeout_ticks > 0)
+        {
+            for (auto const &[req_id, issue_cyc] : m_inflight_requests)
+            {
+                if (m_clk_cycle > issue_cyc + m_request_timeout_ticks && m_warned_requests.find(req_id) == m_warned_requests.end())
+                {
+                    std::cout << "WARNING: ExternalCPU " << m_id << " request " << req_id << " did not return within " << m_request_timeout_ticks << " ticks (elapsed: " << (m_clk_cycle - issue_cyc) << ")" << std::endl;
+                    m_warned_requests.insert(req_id);
+                }
+            }
+        }
         m_clk_cycle++;
     }
 
@@ -78,6 +92,8 @@ namespace octopus
                     m_link_full_holds++;
                     return;
                 }
+                if (m_request_timeout_ticks > 0)
+                    m_inflight_requests[ready_msg.msg_id] = m_clk_cycle;
                 if (m_log_requests && s_log_enabled)
                 {
                     // ready = issue cycle: the core model has already waited
@@ -90,6 +106,11 @@ namespace octopus
             }
             else if(ready_msg.source == Message::Source::UPPER_INTERCONNECT)
             {
+                if (m_request_timeout_ticks > 0)
+                {
+                    m_inflight_requests.erase(ready_msg.msg_id);
+                    m_warned_requests.erase(ready_msg.msg_id);
+                }
                 // Only while logging: once the reports are written, a late
                 // response would make the Logger reopen (and truncate) its
                 // core's report. Requests in flight at the end have no row.

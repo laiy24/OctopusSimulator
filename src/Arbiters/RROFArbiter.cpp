@@ -40,7 +40,7 @@ namespace octopus
         if (requestors_queues != nullptr)
         {
             unsigned int requestor_count = requestors_queues->getRRQueueSize();
-            for (unsigned int slot = 0; slot < message_count; ++slot)
+            for (unsigned int slot = 0; ; ++slot)
             {
                 bool has_live_requestor = false;
                 for (unsigned int requestor_index = 0; requestor_index < requestor_count; ++requestor_index)

@@ -96,6 +96,9 @@ namespace octopus
         int m_id;
         uint64_t m_clk_cycle;
         uint64_t m_link_full_holds = 0;
+        uint64_t m_request_timeout_ticks = 0;
+        std::map<uint64_t, uint64_t> m_inflight_requests;
+        std::set<uint64_t> m_warned_requests;
 
         // Request logging (config log_requests): each request issued to the
         // L1 and its response are reported to the Logger under the core this

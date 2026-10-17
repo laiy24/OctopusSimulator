@@ -23,6 +23,8 @@ namespace octopus
         //Parameters initialization
         m_clk_period = std::get<int>(parameters.at(STRINGIFY(m_clk_period)).value);
         m_number_of_OoO_requests = std::get<int>(parameters.at(STRINGIFY(m_number_of_OoO_requests)).value);
+        if (parameters.find(STRINGIFY(request_timeout_ticks)) != parameters.end())
+            m_request_timeout_ticks = (uint64_t)std::get<int>(parameters.at(STRINGIFY(request_timeout_ticks)).value);
 
         //Constructor
         m_id = id;
@@ -78,6 +80,18 @@ namespace octopus
         else
             processLogic();
 
+        if (m_request_timeout_ticks > 0)
+        {
+            for (auto const &[req_id, issue_cyc] : m_inflight_requests)
+            {
+                if (m_clk_cycle > issue_cyc + m_request_timeout_ticks && m_warned_requests.find(req_id) == m_warned_requests.end())
+                {
+                    std::cout << "WARNING: CPU " << m_id << " request " << req_id << " did not return within " << m_request_timeout_ticks << " ticks (elapsed: " << (m_clk_cycle - issue_cyc) << ")" << std::endl;
+                    m_warned_requests.insert(req_id);
+                }
+            }
+        }
+
         m_clk_cycle++;
     }
 
@@ -131,8 +145,11 @@ namespace octopus
                 // difference issue - ready is then the own-core OoO-window wait.
                 m_sample_in_progess->msg.cycle = std::max(issue_cycle, m_sample_in_progess->read_cycle);
                 m_sample_in_progess->msg.kind = Message::K_DEMAND;
+                uint64_t sent_msg_id = m_sample_in_progess->msg.msg_id;
                 if(m_upper_interface->pushMessage(m_sample_in_progess->msg))
                 {
+                    if (m_request_timeout_ticks > 0)
+                        m_inflight_requests[sent_msg_id] = m_clk_cycle;
                     Logger::getLogger()->addRequest(this->m_id, m_sample_in_progess->msg);
                     Logger::getLogger()->event(m_sample_in_progess->msg.msg_id, Logger::Role::CPU,
                                                (uint32_t)this->m_id, Logger::Phase::ENTER);
@@ -152,6 +169,11 @@ namespace octopus
         if (m_upper_interface->peekMessage(&msg))
         {
             m_upper_interface->popFrontMessage();
+            if (m_request_timeout_ticks > 0)
+            {
+                m_inflight_requests.erase(msg.msg_id);
+                m_warned_requests.erase(msg.msg_id);
+            }
             if (m_periodic)
             {
                 auto it = m_issue_cycle.find(msg.msg_id);
@@ -398,8 +420,11 @@ namespace octopus
             {
                 m_sample_in_progess->msg.cycle = std::max(issue_cycle, m_sample_in_progess->read_cycle);
                 m_sample_in_progess->msg.kind = Message::K_DEMAND;
+                uint64_t sent_msg_id = m_sample_in_progess->msg.msg_id;
                 if (m_upper_interface->pushMessage(m_sample_in_progess->msg))
                 {
+                    if (m_request_timeout_ticks > 0)
+                        m_inflight_requests[sent_msg_id] = m_clk_cycle;
                     Logger::getLogger()->addRequest(this->m_id, m_sample_in_progess->msg);
                     Logger::getLogger()->event(m_sample_in_progess->msg.msg_id, Logger::Role::CPU, (uint32_t)this->m_id, Logger::Phase::ENTER);
                     Logger::getLogger()->trace(m_sample_in_progess->msg, Logger::Role::CPU, (uint32_t)this->m_id, Logger::Phase::ENTER);
