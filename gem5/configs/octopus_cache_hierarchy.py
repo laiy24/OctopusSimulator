@@ -5,8 +5,12 @@ from m5.objects import (
     SystemXBar,
     AddrRange,
     Octopus,
-    ProfileGen
 )
+
+try:
+    from m5.objects import ProfileGen
+except (ImportError, AttributeError):
+    ProfileGen = None
 
 from gem5.components.boards.abstract_board import AbstractBoard
 from gem5.components.cachehierarchies.classic.abstract_classic_cache_hierarchy import (
@@ -40,8 +44,17 @@ class OctopusCacheHierarchy(AbstractClassicCacheHierarchy):
             os.makedirs(os.path.join(self._outputPath, "newLogger"), exist_ok=True)
         self.membus = SystemXBar(width=64)
         if atp_files is not None:
+            if ProfileGen is None:
+                raise RuntimeError(
+                    "ProfileGen is not available in m5.objects. Please ensure gem5 is compiled with ProfileGen support to use ATP."
+                )
             self._useATP = True
-            self.atp_adaptor = ProfileGen(config_files=atp_files, exit_when_done=False, trace_atp=False, init_only=True)
+            self.atp_adaptor = ProfileGen(
+                config_files=atp_files,
+                exit_when_done=False,
+                trace_atp=False,
+                init_only=False
+            )
 
     def _bridge(self, cache_id, core):
         return Octopus(
@@ -94,13 +107,22 @@ class OctopusCacheHierarchy(AbstractClassicCacheHierarchy):
 
         if self._useATP:
             base = 2 * n
+            # Ensure num_ports matches the number of masters in your ATP profiles
+            # If each profile file has 1 master, len(config_files) is fine;
+            # otherwise, set this to the total number of masters (e.g., 2 if you have default + GPU).
+            num_ports = max(len(self.atp_adaptor.config_files), 2)
+
             self.atp_caches = [
                 self._bridge(base + i, i)
-                for i in range(len(self.atp_adaptor.config_files))
+                for i in range(num_ports)
             ]
-            for i in range(len(self.atp_adaptor.config_files)):
-                self.atp_adaptor.port = self.atp_caches[i].cpu_side
-                self.atp_caches[i].mem_side = self.membus.cpu_side_ports
+
+            # 1. Connect all Octopus bridges downstream to the membus
+            for bridge in self.atp_caches:
+                bridge.mem_side = self.membus.cpu_side_ports
+
+            # 2. Assign the upstream ports as a Python list to populate the VectorPort
+            self.atp_adaptor.port = [bridge.cpu_side for bridge in self.atp_caches]
 
     def _setup_io_cache(self, board: AbstractBoard) -> None:
         """Create a cache for coherent I/O connections"""
