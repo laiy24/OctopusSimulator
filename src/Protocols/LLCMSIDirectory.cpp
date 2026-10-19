@@ -83,6 +83,7 @@ namespace octopus
                                                              0,                // Cycle
                                                              (uint16_t)action, // Complementary_value
                                                              msg.owner);       // Owner
+                ((Message *)controller_action.data)->llc_addr_restore = msg.llc_addr_restore;
                 ((Message *)controller_action.data)->to.push_back((uint16_t)this->m_shared_memory_id);
                 ((Message *)controller_action.data)->kind = Message::K_MEM_READ;
                 break;
@@ -181,6 +182,7 @@ namespace octopus
                                                              0,                                             // Cycle
                                                              (uint16_t)MSIDirectory::REQUEST_TYPE_PUT_ACK, // Complementary_value
                                                              (uint16_t)this->m_id);                         // Owner
+                ((Message *)controller_action.data)->llc_addr_restore = msg.llc_addr_restore;
                 ((Message *)controller_action.data)->to.push_back((uint16_t)msg.owner);
                 ((Message *)controller_action.data)->kind = Message::K_ACK;
                 break;
@@ -193,6 +195,7 @@ namespace octopus
                                                              0,          // Cycle
                                                              0,          // Complementary_value
                                                              m_id); // Owner
+                ((Message *)controller_action.data)->llc_addr_restore = msg.llc_addr_restore;
                 ((Message *)controller_action.data)->kind = Message::K_MEM_WRITE;
                 break;
 

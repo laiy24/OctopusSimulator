@@ -29,7 +29,7 @@ namespace octopus
     {
         Message msg;
 
-        if (m_upper_interface->peekMessage(&msg))
+        if (m_upper_interface != nullptr && m_upper_interface->peekMessage(&msg))
         {
             if(msg.data != NULL)
                 m_owner_of_latest_data = msg.owner;
@@ -119,8 +119,9 @@ namespace octopus
         Message *msg = (Message *)data_ptr;
         msg->cycle = this->m_cache_cycle;
 
-        if (AddrMapping::getAddrMapping()->isBanked() ||
-            AddrMapping::getAddrMapping()->getPartitionSetup() == "SetPartition")
+        if ((AddrMapping::getAddrMapping()->isBanked() ||
+             AddrMapping::getAddrMapping()->getPartitionSetup() == "SetPartition") &&
+            m_log_role == Logger::Role::LLC)
         {
             AddrMapping::getAddrMapping()->addr_map_restore(msg, this->m_bank_index);
         }

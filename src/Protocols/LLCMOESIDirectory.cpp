@@ -61,6 +61,7 @@ namespace octopus
                                                          0,                      // Cycle
                                                          0,                      // Complementary_value
                                                          (uint16_t)this->m_id);  // Owner
+            ((Message *)controller_action.data)->llc_addr_restore = msg.llc_addr_restore;
             ((Message *)controller_action.data)->to.push_back((uint16_t)msg.owner);
             ((Message *)controller_action.data)->complementary_value2 = MOESIDirectory::RESPONSE_TYPE_ACKCOUNT;
             

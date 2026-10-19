@@ -64,7 +64,8 @@ namespace octopus
                                                  0,                                   // Cycle
                                                  MOESIDirectory::REQUEST_TYPE_PUTO,   // Complementary_value
                                                  (uint16_t)this->m_id);               // Owner
-            
+            ((Message *)controller_action.data)->llc_addr_restore = msg.llc_addr_restore;
+
             ((Message *)controller_action.data)->to.clear();                
             controller_actions.insert(controller_actions.begin(), controller_action);
         }

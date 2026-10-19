@@ -63,13 +63,14 @@ public:
                           K_PUTS, K_FWD, K_ACK };
     uint8_t kind = K_UNKNOWN;
 
-    Message(uint64_t msg_id = 0, uint64_t addr = 0, uint64_t cycle = 0, uint64_t complementary_value = 0, uint16_t owner = 0)
+    Message(uint64_t msg_id = 0, uint64_t addr = 0, uint64_t cycle = 0, uint64_t complementary_value = 0, uint16_t owner = 0, uint16_t llc_addr_restore = 0)
     {
         this->msg_id = msg_id;
         this->addr = addr;
         this->cycle = cycle;
         this->complementary_value = complementary_value;
         this->owner = owner;
+        this->llc_addr_restore = llc_addr_restore;
 
         this->source = LOWER_INTERCONNECT;
         this->to.clear();

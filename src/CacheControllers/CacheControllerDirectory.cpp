@@ -7,6 +7,7 @@
  */
 
 #include "../../header/CacheControllers/CacheControllerDirectory.h"
+#include "../../header/AddrMapping.h"
 
 namespace octopus
 {
@@ -163,6 +164,13 @@ namespace octopus
     {
         Message *msg = (Message *)data_ptr;
         msg->cycle = this->m_cache_cycle;
+
+        if ((AddrMapping::getAddrMapping()->isBanked() ||
+             AddrMapping::getAddrMapping()->getPartitionSetup() == "SetPartition") &&
+            m_log_role == Logger::Role::LLC)
+        {
+            AddrMapping::getAddrMapping()->addr_map_restore(msg, this->m_bank_index);
+        }
 
         if(!msg->to.empty())
         {

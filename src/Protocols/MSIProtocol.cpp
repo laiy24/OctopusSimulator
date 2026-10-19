@@ -148,6 +148,7 @@ namespace octopus
 
                 ((Message *)controller_action.data)->to.push_back((uint16_t)this->getLLCDestination(msg.addr, this->m_id));
                 ((Message *)controller_action.data)->kind = (action == (int)ActionId::GetS) ? Message::K_GETS : Message::K_GETM;
+                ((Message *)controller_action.data)->llc_addr_restore = msg.llc_addr_restore;
                 break;
             case ActionId::PutM:
                 // send Bus request, update cache line
@@ -159,6 +160,7 @@ namespace octopus
                                                              (uint16_t)this->m_id);     // Owner
                 ((Message *)controller_action.data)->to.push_back((uint16_t)this->getLLCDestination(msg.addr, this->m_id));
                 ((Message *)controller_action.data)->kind = Message::K_PUTM;
+                ((Message *)controller_action.data)->llc_addr_restore = msg.llc_addr_restore;
                 break;
 
             case ActionId::Data2Req:
@@ -195,6 +197,7 @@ namespace octopus
                                                              0,                       // Cycle
                                                              msg.complementary_value, // GETS / GETM
                                                              msg.owner);              // Owner
+                ((Message *)controller_action.data)->llc_addr_restore = msg.llc_addr_restore;
                 break;
 
             case ActionId::Fault:

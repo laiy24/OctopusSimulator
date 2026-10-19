@@ -177,14 +177,22 @@ namespace octopus
                                       m_clk_cycle,                  // Cycle
                                       0,                            // Complementary_value
                                       m_pending_requests[i].owner); // Owner
+                msg.llc_addr_restore = m_pending_requests[i].llc_addr_restore;
                 int target_llc = m_llc_id;
                 if (AddrMapping::getAddrMapping()->isBanked())
                 {
-                    int bank = AddrMapping::getAddrMapping()->get_bnk_bits(m_pending_requests[i].addr, m_pending_requests[i].owner);
-                    if (!m_llc_ids.empty() && bank < (int)m_llc_ids.size())
-                        target_llc = m_llc_ids[bank];
+                    if (AddrMapping::getAddrMapping()->isLLCId(m_pending_requests[i].owner))
+                    {
+                        target_llc = m_pending_requests[i].owner;
+                    }
                     else
-                        target_llc = AddrMapping::getAddrMapping()->getLLCId(bank);
+                    {
+                        int bank = AddrMapping::getAddrMapping()->get_bnk_bits(m_pending_requests[i].addr, m_pending_requests[i].owner);
+                        if (!m_llc_ids.empty() && bank < (int)m_llc_ids.size())
+                            target_llc = m_llc_ids[bank];
+                        else
+                            target_llc = AddrMapping::getAddrMapping()->getLLCId(bank);
+                    }
                 }
                 msg.to.push_back((uint16_t)target_llc);               // To (back to the LLC)
                 msg.kind = Message::K_FILL;

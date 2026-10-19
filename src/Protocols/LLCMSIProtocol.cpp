@@ -117,6 +117,7 @@ namespace octopus
                                                              0,                // Cycle
                                                              (uint16_t)action, // Complementary_value
                                                              msg.owner);       // Owner
+                ((Message *)controller_action.data)->llc_addr_restore = msg.llc_addr_restore;
                 ((Message *)controller_action.data)->to.push_back((uint16_t)this->m_shared_memory_id);
                 ((Message *)controller_action.data)->kind = Message::K_MEM_READ;
                 break;
@@ -142,6 +143,7 @@ namespace octopus
                                                              0,                                       // Cycle
                                                              (uint16_t)MSIProtocol::REQUEST_TYPE_INV, // Complementary_value
                                                              (uint16_t)this->m_id);              // Owner
+                ((Message *)controller_action.data)->llc_addr_restore = msg.llc_addr_restore;
                 ((Message *)controller_action.data)->to.push_back((uint16_t)this->m_id);
                 ((Message *)controller_action.data)->kind = Message::K_INV;
                 break;
@@ -154,6 +156,7 @@ namespace octopus
                                                              0,          // Cycle
                                                              0,          // Complementary_value
                                                              msg.owner); // Owner
+                ((Message *)controller_action.data)->llc_addr_restore = msg.llc_addr_restore;
                 // When the write-back is triggered by data arriving (e.g. an L1
                 // writing back its dirty copy for a line the inclusive LLC evicted
                 // while awaiting it: MN_d + Data_fromLowerInterface), forward THAT

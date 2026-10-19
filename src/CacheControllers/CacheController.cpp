@@ -12,6 +12,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include "../../header/ExternalCPU.h"
+#include "../../header/AddrMapping.h"
 
 namespace octopus
 {
@@ -185,6 +186,13 @@ namespace octopus
         Message *msg = (Message *)data_ptr;
         msg->cycle = this->m_cache_cycle;
 
+        if ((AddrMapping::getAddrMapping()->isBanked() ||
+             AddrMapping::getAddrMapping()->getPartitionSetup() == "SetPartition") &&
+            m_log_role == Logger::Role::LLC)
+        {
+            AddrMapping::getAddrMapping()->addr_map_restore(msg, this->m_bank_index);
+        }
+
         // Back-invalidation travels on the TripleBus service channel: pushMessage
         // with SERVICE_REQUEST -> service bus broadcasts it to every interface, so
         // all L1 sharers see the INV (Invalidation) and the LLC receives its own
@@ -212,6 +220,7 @@ namespace octopus
             std::vector<Message> &saved = saved_it->second;
             msg->owner = saved.front().owner;
             msg->msg_id = saved.front().msg_id;
+            msg->llc_addr_restore = saved.front().llc_addr_restore;
 
             // Destination rule of the deferred supply, mirroring the FSM's Data2Both /
             // Data2Req choice: a parked GetS means the LLC handed ownership to us and

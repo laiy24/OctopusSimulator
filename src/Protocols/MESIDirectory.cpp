@@ -48,6 +48,7 @@ namespace octopus
                                                          0,                               // Cycle
                                                          MESIDirectory::REQUEST_TYPE_PUTE,// Complementary_value
                                                          (uint16_t)this->m_id);           // Owner
+            ((Message *)controller_action.data)->llc_addr_restore = msg.llc_addr_restore;
             ((Message *)controller_action.data)->to.push_back((uint16_t)this->getLLCDestination(msg.addr, this->m_id));
             controller_actions.push_back(controller_action);
         }
