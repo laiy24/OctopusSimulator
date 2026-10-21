@@ -9,12 +9,14 @@
 #ifndef _IDGENERATOR_H
 #define	_IDGENERATOR_H
 
+#include <cstdint>
+
 class IdGenerator {
 private:
-    static int reqId;
+    static uint64_t reqId;
 
 public:
-    static int nextReqId() {
+    static uint64_t nextReqId() {
         return reqId++;
     }
 

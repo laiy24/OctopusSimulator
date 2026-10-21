@@ -12,23 +12,23 @@ namespace MCsim
 	class RequestorsQueues
 	{
 		public:
-			bool addRequest(unsigned int coreID, unsigned int requestID,unsigned int phase, unsigned int reqAddr);
+			bool addRequest(unsigned int coreID, uint64_t requestID,unsigned int phase, uint64_t reqAddr);
 			//bool addRequest(unsigned int coreID, unsigned int requestID,unsigned int phase);
-			bool add2UnifiedQueue(unsigned int coreID, unsigned int requestID, unsigned int reqAddr);
-			unsigned int getRequest(unsigned int coreID, unsigned int slot, unsigned int *orig_coreID);
-			void removeRequest(unsigned int coreID, unsigned int requestID);
-			int isRequestExist(unsigned int coreID, unsigned int requestID, unsigned int *core, bool *vector);
-			void setRemovalCount(unsigned int coreID, unsigned int requestID, unsigned int requestPhase);
-			unsigned int getRemovalCount(unsigned int coreID, unsigned int requestID);
+			bool add2UnifiedQueue(unsigned int coreID, uint64_t requestID, uint64_t reqAddr);
+			uint64_t getRequest(unsigned int coreID, unsigned int slot, unsigned int *orig_coreID);
+			void removeRequest(unsigned int coreID, uint64_t requestID);
+			int isRequestExist(unsigned int coreID, uint64_t requestID, unsigned int *core, bool *vector);
+			void setRemovalCount(unsigned int coreID, uint64_t requestID, unsigned int requestPhase);
+			unsigned int getRemovalCount(unsigned int coreID, uint64_t requestID);
 			unsigned int getRequestorSize(unsigned int coreID);
 			unsigned int getRRQueueSize ();
 			unsigned int getRRCore (unsigned int index);	
 			void clearRequests();
 			void update();
 			void updateClk(uint64_t clk);
-			void updateReqLogger(unsigned int requestID, int type);
+			void updateReqLogger(uint64_t requestID, int type);
 
-			void ifOldest_promote(unsigned int coreID, unsigned int requestID);
+			void ifOldest_promote(unsigned int coreID, uint64_t requestID);
 			void setLoggerPath(string path);
 
 			enum class Latency_type : int {

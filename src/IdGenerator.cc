@@ -1,4 +1,4 @@
 #include "../header/IdGenerator.h"
 
-int IdGenerator::reqId = 1;
+uint64_t IdGenerator::reqId = 1;
 

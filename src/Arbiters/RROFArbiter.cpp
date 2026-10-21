@@ -51,7 +51,7 @@ namespace octopus
 
                     has_live_requestor = true;
                     unsigned int original_owner = 0;
-                    unsigned int request_id = requestors_queues->getRequest(requestor_id, slot, &original_owner);
+                    uint64_t request_id = requestors_queues->getRequest(requestor_id, slot, &original_owner);
                     auto it = buffer_index.find(request_id);
                     if (it == buffer_index.end())
                         continue;

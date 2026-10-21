@@ -112,8 +112,8 @@ namespace octopus
                 Logger::getLogger()->trace(ready_msg, Logger::Role::DRAM, (uint32_t)m_id, Logger::Phase::ENTER);
                 MCsim::RequestorsQueues *requestors_queues = RequestorsQueues::getRequestorsQueues();
                 if (requestors_queues != nullptr)
-                    requestors_queues->addRequest(ready_msg.owner, (unsigned int)ready_msg.msg_id,
-                                                  1, (unsigned int)ready_msg.addr);
+                    requestors_queues->addRequest(ready_msg.owner, ready_msg.msg_id,
+                                                  1, ready_msg.addr);
                 if (ready_msg.data == NULL) // Add read requests only (writes are fire-and-forget)
                     m_pending_requests.push_back(ready_msg);
                 else
@@ -205,11 +205,11 @@ namespace octopus
                 MCsim::RequestorsQueues *requestors_queues = RequestorsQueues::getRequestorsQueues();
                 if (requestors_queues != nullptr &&
                     requestors_queues->isRequestExist(m_pending_requests[i].owner,
-                                                      (unsigned int)m_pending_requests[i].msg_id,
+                                                      m_pending_requests[i].msg_id,
                                                       nullptr, nullptr) >= 0)
                 {
                     requestors_queues->removeRequest(m_pending_requests[i].owner,
-                                                     (unsigned int)m_pending_requests[i].msg_id);
+                                                     m_pending_requests[i].msg_id);
                 }
 
                 m_pending_requests.erase(m_pending_requests.begin() + i);
@@ -237,11 +237,11 @@ namespace octopus
             MCsim::RequestorsQueues *requestors_queues = RequestorsQueues::getRequestorsQueues();
             if (requestors_queues != nullptr &&
                 requestors_queues->isRequestExist(m_pending_writes[i].owner,
-                                                  (unsigned int)m_pending_writes[i].msg_id,
+                                                  m_pending_writes[i].msg_id,
                                                   nullptr, nullptr) >= 0)
             {
                 requestors_queues->removeRequest(m_pending_writes[i].owner,
-                                                 (unsigned int)m_pending_writes[i].msg_id);
+                                                 m_pending_writes[i].msg_id);
             }
             m_pending_writes.erase(m_pending_writes.begin() + i);
             return;

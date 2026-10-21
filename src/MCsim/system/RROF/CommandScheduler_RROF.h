@@ -16,7 +16,7 @@ namespace MCsim
 		unsigned int slot=0;
 		//const std::vector<RequestQueue *> &requestQueue;
 		unsigned int requestorId;
-		unsigned int requestID;
+		uint64_t requestID;
 		unsigned int requestBank;
 		unsigned int numReq;
 		std::vector<bool> requestorFlag;

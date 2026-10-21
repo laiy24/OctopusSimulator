@@ -36,7 +36,7 @@ RequestorsQueues::~RequestorsQueues()
 }
 
 // insert request in global queues
-bool RequestorsQueues::addRequest(unsigned int coreID, unsigned int requestID,unsigned int phase, unsigned int reqAddr)
+bool RequestorsQueues::addRequest(unsigned int coreID, uint64_t requestID,unsigned int phase, uint64_t reqAddr)
 {
 	if(!isCoreExist(coreID))
 	{
@@ -67,7 +67,7 @@ bool RequestorsQueues::addRequest(unsigned int coreID, unsigned int requestID,un
 	return true;
 }
 
-bool RequestorsQueues::add2UnifiedQueue(unsigned int coreID, unsigned int requestID, unsigned int reqAddr)
+bool RequestorsQueues::add2UnifiedQueue(unsigned int coreID, uint64_t requestID, uint64_t reqAddr)
 {
 	if(pr_promote)
 	{
@@ -80,12 +80,12 @@ bool RequestorsQueues::add2UnifiedQueue(unsigned int coreID, unsigned int reques
 }
 
 
-void RequestorsQueues::updateReqLogger(unsigned int requestID, int type)
+void RequestorsQueues::updateReqLogger(uint64_t requestID, int type)
 {
 }
 
 // get a request ID in a certain location
-unsigned int RequestorsQueues::getRequest(unsigned int coreID, unsigned int slot, unsigned int *orig_coreID)
+uint64_t RequestorsQueues::getRequest(unsigned int coreID, unsigned int slot, unsigned int *orig_coreID)
 {
 	*orig_coreID = coreID;
 	if (slot == 0)
@@ -95,7 +95,7 @@ unsigned int RequestorsQueues::getRequest(unsigned int coreID, unsigned int slot
 			DEBUG("Error RequestorsQueues: getRequest: oldest queue is empty for core " << coreID);
 			return 0;
 		}
-		unsigned int reqID = oldest_requestorsQueues[coreID].begin()->first;
+		uint64_t reqID = oldest_requestorsQueues[coreID].begin()->first;
 		auto it = unifyMap.find(reqID);
 		if (it != unifyMap.end())
 		{
@@ -127,7 +127,7 @@ bool RequestorsQueues::isCoreExist(unsigned int coreID)
 	}
 }
 
-int RequestorsQueues::isRequestExist(unsigned int coreID, unsigned int requestID, unsigned int *core, bool *vector) //returns the request slot
+int RequestorsQueues::isRequestExist(unsigned int coreID, uint64_t requestID, unsigned int *core, bool *vector) //returns the request slot
 {
 	// Use requestIndex for O(1) lookup, but preserve original search semantics:
 	// Original searches younger[coreID] first, then ALL oldest queues.
@@ -189,7 +189,7 @@ void RequestorsQueues::clearRequests()
 }
 
 // Remove the served request, completed request, access with core ID
-void RequestorsQueues::removeRequest(unsigned int coreID, unsigned int requestID)
+void RequestorsQueues::removeRequest(unsigned int coreID, uint64_t requestID)
 {
 	bool vector;
 	unsigned int core;
@@ -259,13 +259,13 @@ void RequestorsQueues::removeRequest(unsigned int coreID, unsigned int requestID
 	
 }
 
-void RequestorsQueues::printLogger (unsigned int coreID, unsigned int requestID)
+void RequestorsQueues::printLogger (unsigned int coreID, uint64_t requestID)
 {
 	file << requestID << ","<< coreID<< "," << (clock - WCL_logger[requestID][0])<< "," <<WCL_logger[requestID][0] << ","<<clock<< endl;
 
 }
 
-void RequestorsQueues::setRemovalCount(unsigned int coreID, unsigned int requestID, unsigned int count)
+void RequestorsQueues::setRemovalCount(unsigned int coreID, uint64_t requestID, unsigned int count)
 {
 	bool vector;
 	unsigned int core;
@@ -286,7 +286,7 @@ void RequestorsQueues::setRemovalCount(unsigned int coreID, unsigned int request
 }
 
 
-unsigned int RequestorsQueues::getRemovalCount (unsigned int coreID, unsigned int requestID)
+unsigned int RequestorsQueues::getRemovalCount (unsigned int coreID, uint64_t requestID)
 {
 	bool vector;
 	unsigned int core;
@@ -328,7 +328,7 @@ unsigned int RequestorsQueues::getRRCore (unsigned int index)
 	return RROrder[index];
 }	
 
-void RequestorsQueues::ifOldest_promote(unsigned int coreID, unsigned int requestID)
+void RequestorsQueues::ifOldest_promote(unsigned int coreID, uint64_t requestID)
 {
 	if(pr_promote)
 	{

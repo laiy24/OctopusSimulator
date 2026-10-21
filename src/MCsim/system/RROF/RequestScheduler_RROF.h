@@ -14,7 +14,7 @@ namespace MCsim
 
 		RequestorsQueues * requestorsQueues;
 		unsigned int requestorId;
-		unsigned int requestId;
+		uint64_t requestId;
 		unsigned int requestorsNum;
 		unsigned int requestBank;
 		bool requestFound;
