@@ -173,6 +173,8 @@ namespace octopus
         {
             ParametersMap sub = (num_llc_banks > 1) ? getSubMap(STRINGIFY(llc_controller), b)
                                                     : getSubMap(STRINGIFY(llc_controller));
+            if (sub.empty() || sub.find("m_id") == sub.end())
+                sub = getSubMap(STRINGIFY(llc_controller), b);
             int llc_id = llc_ids[b];
             BaseController *ctrl = createController(llc_controller_type, sub,
                                                     bus[1]->getInterfaceFor(llc_id),

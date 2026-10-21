@@ -15,7 +15,7 @@
 
 namespace MCsim
 {
-	typedef CallbackBase<void, unsigned, uint64_t, uint64_t> Callback_t;
+	typedef CallbackBase<void, uint64_t, uint64_t, uint64_t> Callback_t;
 	class MemorySystem : public SimulatorObject
 	{
 

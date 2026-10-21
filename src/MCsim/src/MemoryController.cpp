@@ -567,7 +567,10 @@ void MemoryController::returnReadData(const Request *req)
 		fprintf(pf, "%llu DONE addr=%llu\n", (unsigned long long)clockCycle, (unsigned long long)req->address);
 	if (parentMemorySystem->ReturnReadData != NULL)
 	{
-		(*parentMemorySystem->ReturnReadData)(parentMemorySystem->systemID, req->address, clockCycle);
+		// Pass req->reqID instead of systemID (0) so the callback can identify the
+		// exact request. Address-only matching hangs multi-core runs when multiple cores
+		// read the same line concurrently (e.g. Core 1 and 3 reading 0x80eb90c0).
+		(*parentMemorySystem->ReturnReadData)(req->reqID, req->address, clockCycle);
 	}
 }
 
@@ -575,7 +578,8 @@ void MemoryController::writeDataDone(const Request *req)
 {
 	if (parentMemorySystem->WriteDataDone != NULL)
 	{
-		(*parentMemorySystem->WriteDataDone)(parentMemorySystem->systemID, req->address, clockCycle);
+		// Pass req->reqID instead of systemID (0) to correlate the exact write completion.
+		(*parentMemorySystem->WriteDataDone)(req->reqID, req->address, clockCycle);
 	}
 }
 

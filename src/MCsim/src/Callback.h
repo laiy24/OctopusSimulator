@@ -45,7 +45,7 @@ namespace MCsim
 		const PtrMember member;
 	};
 
-	typedef CallbackBase<void, unsigned, uint64_t, uint64_t> TransactionCompleteCB;
+	typedef CallbackBase<void, uint64_t, uint64_t, uint64_t> TransactionCompleteCB;
 } // namespace MCsim
 
 #endif

@@ -59,8 +59,8 @@ namespace octopus
         m_mcsim->setCPUClockSpeed(2.4 * 1e9);
         RequestorsQueues::setRequestorsQueues(m_mcsim->getRequestorsQueues());
 
-        MCsim::TransactionCompleteCB *read_cb = new MCsim::MCsimCallback<MCsimInterface, void, unsigned, uint64_t, uint64_t>(this, &MCsimInterface::read_callback);
-        MCsim::TransactionCompleteCB *write_cb = new MCsim::MCsimCallback<MCsimInterface, void, unsigned, uint64_t, uint64_t>(this, &MCsimInterface::write_callback);
+        MCsim::TransactionCompleteCB *read_cb = new MCsim::MCsimCallback<MCsimInterface, void, uint64_t, uint64_t, uint64_t>(this, &MCsimInterface::read_callback);
+        MCsim::TransactionCompleteCB *write_cb = new MCsim::MCsimCallback<MCsimInterface, void, uint64_t, uint64_t, uint64_t>(this, &MCsimInterface::write_callback);
         m_mcsim->RegisterCallbacks(read_cb, write_cb);
     }
 
@@ -158,14 +158,17 @@ namespace octopus
         return FRFCFS_State::Ready;
     }
 
-    void MCsimInterface::read_callback(unsigned id, uint64_t address, uint64_t clock_cycle)
+    void MCsimInterface::read_callback(uint64_t id, uint64_t address, uint64_t clock_cycle)
     {
         bool found = false;
         if (mcsimTraced(address))
             cout << "[mcsim] cyc " << m_clk_cycle << " read_callback addr 0x" << std::hex << address << std::dec << " id " << id << " pending " << m_pending_requests.size() << endl;
         for (int i = 0; i < (int)m_pending_requests.size(); i++)
         {
-            if (m_pending_requests[i].addr == address)
+            // Match by unique msg_id. Matching by address alone aliases when multiple
+            // cores read the same line, causing premature removal from RequestorsQueues
+            // and deadlocking the RROF scheduler.
+            if (m_pending_requests[i].msg_id == id || (id == 0 && m_pending_requests[i].addr == address))
             {
                 uint64_t data = m_read_count;
                 m_read_count++;
@@ -222,12 +225,13 @@ namespace octopus
         }
     }
 
-    void MCsimInterface::write_callback(unsigned id, uint64_t address, uint64_t clock_cycle)
+    void MCsimInterface::write_callback(uint64_t id, uint64_t address, uint64_t clock_cycle)
     {
         m_write_count++;
         for (int i = 0; i < (int)m_pending_writes.size(); ++i)
         {
-            if (m_pending_writes[i].addr != address)
+            // Match by unique msg_id (falling back to address if id == 0).
+            if (m_pending_writes[i].msg_id != id && (id != 0 || m_pending_writes[i].addr != address))
                 continue;
 
             MCsim::RequestorsQueues *requestors_queues = RequestorsQueues::getRequestorsQueues();

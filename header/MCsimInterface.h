@@ -50,8 +50,8 @@ namespace octopus
         virtual void processLogic();
         virtual void addRequests2ProcessingQueue(FRFCFS_Buffer<Message, MCsimInterface> &buf);
 
-        virtual void read_callback(unsigned, uint64_t, uint64_t);
-        virtual void write_callback(unsigned, uint64_t, uint64_t);
+        virtual void read_callback(uint64_t, uint64_t, uint64_t);
+        virtual void write_callback(uint64_t, uint64_t, uint64_t);
 
     public:
         // mem_system names the scheduler config dir under src/MCsim/system/<name>/<name>.ini
