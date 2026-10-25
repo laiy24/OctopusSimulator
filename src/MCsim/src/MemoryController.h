@@ -4,6 +4,7 @@
 #include "SimulatorObject.h"
 
 #include <stdint.h>
+#include <cstdint>
 #include <cstdlib>
 #include <string>
 #include <map>
@@ -55,7 +56,7 @@ namespace MCsim
 
 	private:
 		// General Information
-		unsigned long clockCycle;
+		uint64_t clockCycle;
 		// Information on memory structure
 		unsigned int memTable[Column + 1];
 		// Return served requests back to requestors

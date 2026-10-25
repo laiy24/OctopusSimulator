@@ -8,6 +8,7 @@
 #include <map>
 #include <utility>
 #include <queue>
+#include <cstdint>
 using namespace MCsim;
 
 namespace MCsim
@@ -27,7 +28,7 @@ namespace MCsim
 		void step();
 
 	protected:
-		unsigned long clockCycle;
+		uint64_t clockCycle;
 		// Table to track for criticality for scheduling (Copy of global tables)
 		const std::map<unsigned int, bool> &requestorCriticalTable;
 		// Connect to Request Queue and request buffer

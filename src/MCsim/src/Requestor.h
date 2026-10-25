@@ -5,6 +5,7 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <cstdint>
 #include <math.h>
 #include "Requestor.h"
 //&#include "MemoryController.h"
@@ -66,9 +67,9 @@ namespace MCsim
 
 	private:
 		unsigned requestorID;
-		unsigned prevArrive;
-		unsigned prevComplete;
-		unsigned currentClockCycle;
+		uint64_t prevArrive;
+		uint64_t prevComplete;
+		uint64_t currentClockCycle;
 		unsigned int RequestBufferSize;
 		unsigned int hitRatioCtr;
 		unsigned long requestRequest;

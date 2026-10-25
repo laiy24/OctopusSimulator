@@ -7,6 +7,7 @@
 #include <vector>
 #include <queue>
 #include <fstream>
+#include <cstdint>
 #include "SimulatorObject.h"
 #include "BusPacket.h"
 
@@ -35,7 +36,7 @@ namespace MCsim
 		virtual void receiveFromBus(BusPacket *busPacket) = 0;
 
 	protected:
-		unsigned int clockCycle;
+		uint64_t clockCycle;
 		unsigned int ranks;
 		unsigned int bankGroups;
 		unsigned int banks;

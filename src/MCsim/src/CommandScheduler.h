@@ -6,6 +6,7 @@
 #include "RefreshMachine.h"
 #include <iostream>
 #include <fstream>
+#include <cstdint>
 #include <map>
 #include <utility>
 #include <vector>
@@ -63,7 +64,7 @@ namespace MCsim
 		bool skipCAS;
 		unsigned int ranks, banks;
 		unsigned index_temp;
-		unsigned long clock;
+		uint64_t clock;
 	};
 } // namespace MCsim
 

@@ -34,8 +34,8 @@ namespace MCsim
 		unsigned int requestSize;
 		unsigned long long address;
 		void *data;
-		unsigned int arriveTime;
-		unsigned int returnTime;
+		uint64_t arriveTime;
+		uint64_t returnTime;
 		unsigned int rank;
 		unsigned int bankGroup;
 		unsigned int bank;
